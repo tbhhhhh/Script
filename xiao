@@ -38,7 +38,7 @@ CoreGui:SetCore("SendNotification", {
 
     Text = "请稍等…（反挂机已开启）",
 
-    Duration = 5, 
+    Duration = 6, 
 
 })
 
