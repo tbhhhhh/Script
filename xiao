@@ -6,8 +6,66 @@
 
      Title = "小脚本",
 
-     Text = "脚本维护中...", 
+     Text = "测试", 
 
      Duration = 10,  
 
  })
+
+local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/1cZvgy46"))()
+
+local Window = OrionLib:MakeWindow({Name = "测试", HidePremium = false, SaveConfig = false, IntroText = "注入器："..identifyexecutor(), ConfigFolder = "通用脚本"})
+
+local A = Window:MakeTab({
+
+	Name = "主要",	Icon = "rbxassetid://4483345998",
+
+	PremiumOnly = false
+
+})
+
+A:AddTextbox({
+
+	Name = "移动速度",
+
+	Default = "",
+
+	TextDisappear = true,
+
+	Callback = function(Value)
+
+		game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
+
+	end
+
+})
+
+A:AddButton({
+
+	Name = "阿尔宙斯UI",	Callback = function()
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/AZYsGithub/chillz-workshop/main/Arceus%20X%20V3"))() 
+
+end
+
+})
+
+A:AddToggle({
+
+	Name = "夜视",	Default = false,
+
+	Callback = function(Value)
+
+		if Value then
+
+		    game.Lighting.Ambient = Color3.new(1, 1, 1)
+
+		else
+
+		    game.Lighting.Ambient = Color3.new(0, 0, 0)
+
+		end
+
+	end
+
+})
