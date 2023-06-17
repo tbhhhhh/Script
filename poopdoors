@@ -691,7 +691,7 @@ window_misc.toggle("通知实体",false,function(val)
                 repeat task.wait() until plr:DistanceFromCharacter(v:GetPivot().Position) < 1000 or not v:IsDescendantOf(workspace)
                 
                 if v:IsDescendantOf(workspace) then
-                    message(v.Name:gsub("Moving",""):lower().." 来了快躲"
+                    message(v.Name:gsub("Moving",""):lower().." is coming go hide"
                 end
             end
         end) 
@@ -831,9 +831,9 @@ window_misc.toggle("图书馆密码",false,function(val)
                 local code = table.concat(deciphercode())
                 
                 if code:find("_") then
-                    message("先获得所有书")
+                    message("get all hints first")
                 else
-                    message("密码是 ".. code)
+                    message("the code is ".. code)
                 end
             end
         end)
