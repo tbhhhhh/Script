@@ -718,7 +718,7 @@ window_misc.toggle("删除seek追逐",false,function(val)
     end
 end)
 
-window_misc.toggle("delete gates",false,function(val)
+window_misc.toggle("删除闸门",false,function(val)
     flags.nogates = val
     
     if val then
