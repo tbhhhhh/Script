@@ -1,5 +1,4 @@
 local library = loadstring(game:HttpGet('https://pastebin.com/raw/vPWzQEC8'))()
-
 local plr = game.Players.LocalPlayer
 local char = plr.Character or plr.CharacterAdded:Wait()
 local hum = char:FindFirstChildOfClass("Humanoid") or char:WaitForChild("Humanoid")
@@ -155,7 +154,7 @@ local window_player = library.window("玩家")
 local window_esp = library.window("透视")
 local window_misc = library.window("其他")
 
-window_player.toggle("发光",false,function(val)
+window_player.toggle("高亮",false,function(val)
     flags.light = val
    
     if val then
@@ -691,7 +690,7 @@ window_misc.toggle("通知实体",false,function(val)
                 repeat task.wait() until plr:DistanceFromCharacter(v:GetPivot().Position) < 1000 or not v:IsDescendantOf(workspace)
                 
                 if v:IsDescendantOf(workspace) then
-                    message(v.Name:gsub("Moving",""):lower().." is coming go hide"
+                    message(v.Name:gsub("Moving",""):lower().." is coming go hide")
                 end
             end
         end) 
@@ -701,7 +700,7 @@ window_misc.toggle("通知实体",false,function(val)
     end
 end)
 
-window_misc.toggle("没有seek追逐",false,function(val)
+window_misc.toggle("删除seek追逐",false,function(val)
     flags.noseek = val
     
     if val then
@@ -719,7 +718,7 @@ window_misc.toggle("没有seek追逐",false,function(val)
     end
 end)
 
-window_misc.toggle("删除闸门",false,function(val)
+window_misc.toggle("delete gates",false,function(val)
     flags.nogates = val
     
     if val then
@@ -870,7 +869,7 @@ window_misc.toggle("A-000不上锁",false,function(val)
     end
 end)
 
-window_misc.toggle("loot aura",false,function(val)
+window_misc.toggle("战利品搜刮",false,function(val)
     flags.draweraura = val
     
     if val then
