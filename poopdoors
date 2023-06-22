@@ -203,7 +203,7 @@ window_esp.toggle("门",false,function(val)
             local door = room:WaitForChild("Door"):WaitForChild("Door")
             
             task.wait(0.1)
-            local h = esp(door,Color3.fromRGB(255,240,0),door,"Door")
+            local h = esp(door,Color3.fromRGB(255,240,0),door,"门")
             table.insert(esptable.doors,h)
             
             door:WaitForChild("Open").Played:Connect(function()
