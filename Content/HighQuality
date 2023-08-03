@@ -62,7 +62,6 @@ if config.Sun then
 	sun.Enabled = true
 end
 
-
 if config.Terrain then
 	-- settings {
 	ter.WaterWaveSize = 0.1
