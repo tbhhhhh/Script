@@ -96,7 +96,6 @@ local function CreateGUI(title)
     agreeFrame.TextWrapped = true
     agreeFrame.Active = true
     agreeFrame.Draggable = false
-    agreeFrame.TextScaled = true
     agreeFrame.TextSize = 16  
 
     local corner = Instance.new("UICorner")
