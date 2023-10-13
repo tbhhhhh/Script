@@ -1,0 +1,207 @@
+local a = Instance.new("ScreenGui")
+        local b = Instance.new("ImageButton")
+        a.Name = "Shiftlock (StarterGui)"
+        a.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+        a.ZIndexBehavior = Enum.ZIndexBehavior.Sibling;
+        b.Parent = a;
+        b.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        b.BackgroundTransparency = 1.000;
+        b.Position = UDim2.new(0.921914339, 0, 0.552375436, 0)
+        b.Size = UDim2.new(0.0636147112, 0, 0.0661305636, 0)
+        b.SizeConstraint = Enum.SizeConstraint.RelativeXX;
+        b.Image = "http://www.roblox.com/asset/?id=182223762"
+        local function c()
+          local a = Instance.new('LocalScript', b)
+          local b = {}
+          local c = game:GetService("Players")
+          local d = game:GetService("RunService")
+          local e = game:GetService("ContextActionService")
+          local c = c.LocalPlayer;
+          local c = c.Character or c.CharacterAdded:Wait()
+          local f = c:WaitForChild("HumanoidRootPart")
+          local c = c.Humanoid;
+          local g = workspace.CurrentCamera;
+          local a = a.Parent;
+          uis = game:GetService("UserInputService")
+          ismobile = uis.TouchEnabled;
+          a.Visible = ismobile;
+          local h = {
+            OFF = "rbxasset://textures/ui/mouseLock_off@2x.png",
+            ON = "rbxasset://textures/ui/mouseLock_on@2x.png"
+          }
+          local i = 900000;
+          local j = false;
+          local k = CFrame.new(1.7, 0, 0)
+          local l = CFrame.new(- 1.7, 0, 0)
+          local function m(b)
+            a.Image = h[b]
+          end;
+          local function h(a)
+            c.AutoRotate = a
+          end;
+          local function c(a, a)
+            return CFrame.new(f.Position, Vector3.new(a.CFrame.LookVector.X * i, f.Position.Y, a.CFrame.LookVector.Z * i))
+          end;
+          local function i()
+            h(false)
+            m("ON")
+            f.CFrame = c(f, g)
+            g.CFrame = g.CFrame * k
+          end;
+          local function c()
+            h(true)
+            m("OFF")
+            g.CFrame = g.CFrame * l;
+            pcall(function()
+              j:Disconnect()
+              j = nil
+            end)
+          end;
+          m("OFF")
+          j = false;
+          function ShiftLock()
+            if not j then
+              j = d.RenderStepped:Connect(function()
+                i()
+              end)
+            else
+              c()
+            end
+          end;
+          local f = e:BindAction("ShiftLOCK", ShiftLock, false, "On")
+          e:SetPosition("ShiftLOCK", UDim2.new(0.8, 0, 0.8, 0))
+          a.MouseButton1Click:Connect(function()
+            if not j then
+              j = d.RenderStepped:Connect(function()
+                i()
+              end)
+            else
+              c()
+            end
+          end)
+          return b
+        end;
+        coroutine.wrap(c)()
+        local function b()
+          local a = Instance.new('LocalScript', a)
+          local a = game:GetService("Players")
+          local b = game:GetService("UserInputService")
+          local c = UserSettings()
+          local c = c.GameSettings;
+          local d = {}
+          while not a.LocalPlayer do
+            wait()
+          end;
+          local a = a.LocalPlayer;
+          local e = a:GetMouse()
+          local f = a:WaitForChild("PlayerGui")
+          local g, h, h;
+          local i = true;
+          local j = true;
+          local k = false;
+          local l = false;
+          d.OnShiftLockToggled = Instance.new("BindableEvent")
+          local function m()
+            return a.DevEnableMouseLock and c.ControlMode == Enum.ControlMode.MouseLockSwitch and a.DevComputerMovementMode ~= Enum.DevComputerMovementMode.ClickToMove and c.ComputerMovementMode ~= Enum.ComputerMovementMode.ClickToMove and a.DevComputerMovementMode ~= Enum.DevComputerMovementMode.Scriptable
+          end;
+          if not b.TouchEnabled then
+            i = m()
+          end;
+          local function n()
+            j = not j;
+            d.OnShiftLockToggled:Fire()
+          end;
+          local o = function()
+
+          end;
+          function d:IsShiftLocked()
+            return i and j
+          end;
+          function d:SetIsInFirstPerson(a)
+            l = a
+          end;
+          local function l(a, a, a)
+            if i then
+              n()
+            end
+          end;
+          local function l()
+            if g then
+              g.Parent = nil
+            end;
+            i = false;
+            e.Icon = ""
+            if h then
+              h:disconnect()
+              h = nil
+            end;
+            k = false;
+            d.OnShiftLockToggled:Fire()
+          end;
+          local e = function(a, b)
+            if b then
+              return
+            end;
+            if a.UserInputType ~= Enum.UserInputType.Keyboard or a.KeyCode == Enum.KeyCode.LeftShift or a.KeyCode == Enum.KeyCode.RightShift then
+            end
+          end;
+          local function n()
+            i = m()
+            if i then
+              if g then
+                g.Parent = f
+              end;
+              if j then
+                d.OnShiftLockToggled:Fire()
+              end;
+              if not k then
+                h = b.InputBegan:connect(e)
+                k = true
+              end
+            end
+          end;
+          c.Changed:connect(function(a)
+            if a == "ControlMode" then
+              if c.ControlMode == Enum.ControlMode.MouseLockSwitch then
+                n()
+              else
+                l()
+              end
+            elseif a == "ComputerMovementMode" then
+              if c.ComputerMovementMode == Enum.ComputerMovementMode.ClickToMove then
+                l()
+              else
+                n()
+              end
+            end
+          end)
+          a.Changed:connect(function(b)
+            if b == "DevEnableMouseLock" then
+              if a.DevEnableMouseLock then
+                n()
+              else
+                l()
+              end
+            elseif b == "DevComputerMovementMode" then
+              if a.DevComputerMovementMode == Enum.DevComputerMovementMode.ClickToMove or a.DevComputerMovementMode == Enum.DevComputerMovementMode.Scriptable then
+                l()
+              else
+                n()
+              end
+            end
+          end)
+          a.CharacterAdded:connect(function(a)
+            if not b.TouchEnabled then
+              o()
+            end
+          end)
+          if not b.TouchEnabled then
+            o()
+            if m() then
+              h = b.InputBegan:connect(e)
+              k = true
+            end
+          end;
+          n()
+          return d
+        end;
