@@ -1,6 +1,6 @@
 local DarkraiX = loadstring(game:HttpGet("https://raw.githubusercontent.com/Xingtaiduan/UIForXIAO/main/notifyV1"))()
 
-notify("汉化作者提示", "QQ：2235257491版本v0.6", 5)
+notify("汉化作者提示", "QQ：暂不透露 版本v0.6", 5)
 
 game:GetService("Workspace").CurrentRooms.DescendantAdded:Connect(function(v)
     if not _G.IncreasedDistance then return end
