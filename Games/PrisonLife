@@ -1,0 +1,116 @@
+local lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/Xingtaiduan/UI-Librarys/main/Vape"))()
+
+local win = lib:Window("X脚本--监狱人生",Color3.fromRGB(0, 255, 0), Enum.KeyCode.E)
+
+local tab = win:Tab("武器功能")
+
+tab:Dropdown("选择枪", {"M9", "Remington 870", "AK-47", "M4AI", "Taser"}, function(v)
+    SelectedGun = v
+end)
+
+tab:Button("获取", function()
+task.spawn(function()
+    workspace:FindFirstChild("Remote")['ItemHandler']:InvokeServer({
+        Position = game.Players.LocalPlayer.Character.Head.Position,
+        Parent = workspace.Prison_ITEMS:FindFirstChild(SelectedGun, true)
+    })
+end)
+end)
+
+tab:Button("一枪秒杀", function()
+		local module = nil
+		if game:GetService("Players").LocalPlayer.Backpack:FindFirstChild(SelectedGun) then
+			module = require(game:GetService("Players").LocalPlayer.Backpack[SelectedGun].GunStates)
+		elseif game:GetService("Players").LocalPlayer.Character:FindFirstChild(SelectedGun) then
+			module = require(game:GetService("Players").LocalPlayer.Character[SelectedGun].GunStates)
+		end
+		if module then
+			module["Bullets"] = 15
+		end
+end)
+
+tab:Button("无限子弹", function()
+		local module = nil
+		if game:GetService("Players").LocalPlayer.Backpack:FindFirstChild(SelectedGun) then
+			module = require(game:GetService("Players").LocalPlayer.Backpack[SelectedGun].GunStates)
+		elseif game:GetService("Players").LocalPlayer.Character:FindFirstChild(SelectedGun) then
+			module = require(game:GetService("Players").LocalPlayer.Character[SelectedGun].GunStates)
+		end
+
+		if module then
+			module["MaxAmmo"] = math.huge
+			module["CurrentAmmo"] = math.huge
+			module["StoredAmmo"] = math.huge
+		end
+end)
+
+tab:Button("射速加快", function()
+		local module = nil
+		if game:GetService("Players").LocalPlayer.Backpack:FindFirstChild(SelectedGun) then
+			module = require(game:GetService("Players").LocalPlayer.Backpack[SelectedGun].GunStates)
+		elseif game:GetService("Players").LocalPlayer.Character:FindFirstChild(SelectedGun) then
+			module = require(game:GetService("Players").LocalPlayer.Character[SelectedGun].GunStates)
+		end
+
+		if module then
+			module["FireRate"] = 0.1
+		end
+end)
+
+tab:Button("秒换弹", function()
+		local module = nil
+		if game:GetService("Players").LocalPlayer.Backpack:FindFirstChild(SelectedGun) then
+			module = require(game:GetService("Players").LocalPlayer.Backpack[SelectedGun].GunStates)
+		elseif game:GetService("Players").LocalPlayer.Character:FindFirstChild(SelectedGun) then
+			module = require(game:GetService("Players").LocalPlayer.Character[SelectedGun].GunStates)
+		end
+
+		if module then
+			module["ReloadTime"] = 0.1
+		end
+end)
+
+tab:Dropdown("获得物品", {"Key card","Crude Knife", "Hammer"}, function(v)
+        plr = game:GetService("Players").LocalPlayer
+		local currentCframe = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
+
+        function unsit()
+            plr.Character:FindFirstChildOfClass("Humanoid").Sit = false
+        end   
+        
+        function MoveTo(Pos,t)
+            unsit()
+            pcall(function()
+                if typeof(Pos):lower() == "position" then
+                    Pos = CFrame.new(Pos)
+                end
+                for i =1,3 do
+                    plr.Character:FindFirstChild("HumanoidRootPart").CFrame = Pos
+                end
+            end)
+        end
+
+        function GetItem(Item,Ignore)
+            local saved = game:GetService("Players").LocalPlayer.Character:GetPrimaryPartCFrame()
+            if workspace.Prison_ITEMS.single:FindFirstChild(Item) and workspace.Prison_ITEMS.single:FindFirstChild(Item):FindFirstChild("ITEMPICKUP") then
+                Item =workspace.Prison_ITEMS.single:FindFirstChild(Item)
+                local ohInstance1 = Item:FindFirstChildOfClass("Part") or Item:FindFirstChildOfClass("UnionOperation")
+                MoveTo(CFrame.new(ohInstance1.Position))
+                repeat wait()
+                    local ohInstance1 = Item:FindFirstChildOfClass("Part") or Item:FindFirstChildOfClass("UnionOperation")
+                    MoveTo(CFrame.new(ohInstance1.Position))
+                    task.spawn(function()
+                        workspace.Remote.ItemHandler:InvokeServer(ohInstance1)
+                    end)
+                    wait()
+                until plr.Backpack:FindFirstChild(Item.Name) or plr.Character:FindFirstChild(Item.Name)
+            end
+            if Ignore ~= true then
+                plr.Character:SetPrimaryPartCFrame(Ignore or saved)
+            end
+        end
+
+        GetItem(v,true)
+		wait(.25)
+		game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = currentCframe
+end)
