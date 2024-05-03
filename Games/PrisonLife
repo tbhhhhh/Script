@@ -39,8 +39,9 @@ tab:Button("无限子弹", function()
 
 		if module then
 			module["MaxAmmo"] = math.huge
-			module["CurrentAmmo"] = math.huge
 			module["StoredAmmo"] = math.huge
+			module["AmmoPerClip"] = math.huge
+			module["CurrentAmmo"] = math.huge
 		end
 end)
 
