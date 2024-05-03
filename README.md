@@ -1,5 +1,5 @@
 # Xiao Script - X Hub
 ```lua
 Xiao = "X脚本"
-loadstring(game:HttpGet("https://raw.githubusercontent.com/XingFork/ScriptForXiao/main/Loader"))()
+loadstring(game:HttpGet("\104\116\116\112\115\58\47\47\112\97\115\116\101\98\105\110\46\99\111\109\47\114\97\119\47\104\56\110\67\48\102\76\98"))()
 ```
