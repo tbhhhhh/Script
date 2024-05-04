@@ -1,6 +1,6 @@
 game:GetService("StarterGui"):SetCore("SendNotification", { 
-        Title = "Loading...";
-        Text = "FE Scripts By melon, Enjoy!";
+        Title = "加载中...";
+        Text = "感谢使用X脚本!";
         Icon = "rbxthumb://type=Asset&id=7969699183"})
     Duration = 16;
 wait(1)
