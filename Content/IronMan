@@ -433,7 +433,7 @@ HName.BorderColor3 = Color3.new(244,255,25)
 HName.BorderSizePixel = 2
 HName.Size = UDim2.new(1,0,.75,0)
 HName.Font = "Code"
-HName.Text = [[( 我妈死了 )]]
+HName.Text = [[( Dream!Tale )]]
 HName.TextScaled = true
 HName.TextColor3 = Color3.new(244,255,25)
 HName.TextStrokeColor3 = Color3.new(0.1,0.1,0.1)
@@ -457,7 +457,7 @@ HName.BorderColor3 = Color3.new(0,0,0)
 HName.BorderSizePixel = 2
 HName.Size = UDim2.new(1,0,.75,0)
 HName.Font = "Antique"
-HName.Text = [[我是傻逼]]
+HName.Text = [[Nightmare!Sans]]
 HName.TextScaled = true
 HName.TextColor3 = Color3.new(0,0,0)
 HName.TextStrokeColor3 = Color3.new(0,0,0)
@@ -536,10 +536,9 @@ Part0:Destroy()
 sound(explosionid[math.random(1,#explosionid)],Part0.Position,10,math.random(6,9)/10,200)
 for i,v in pairs(findAllNearestTorso(Part0.Position,50)) do
 if v.Parent:FindFirstChildOfClass("Humanoid").MaxHealth >= 9e+99 then
-v:Destroy()
 else
-v.Parent:FindFirstChildOfClass("Humanoid"):TakeDamage(v.Parent:FindFirstChildOfClass("Humanoid").MaxHealth/(math.random(50,60)/10))
 end
+
 local Position = Part0.Position
 local Target = v.Position
 local direction = Target - Position
@@ -612,16 +611,6 @@ debounce = true
 canjump = false
 attack = true
 
-for i,v in pairs(char:GetChildren()) do
-if v ~= root then
-if v:IsA("Part") then
-v.Transparency = 1
-elseif v:IsA("Accoutrement") then
-v:FindFirstChildOfClass("Part").Transparency = 1
-end
-end
-end
-
 local tempattachment = Instance.new("Attachment",root)
 tempattachment.Position = Vector3.new(0,0,-4)
 
@@ -643,16 +632,6 @@ Part1.Name = "SMOKE"
 end
 
 tempattachment:Destroy()
-
-for i,v in pairs(char:GetChildren()) do
-if v ~= root then
-if v:IsA("Part") then
-v.Transparency = 0
-elseif v:IsA("Accoutrement") then
-v:FindFirstChildOfClass("Part").Transparency = 0
-end
-end
-end
 
 canjump = true
 attack = false
@@ -779,10 +758,9 @@ end
 
 for i,v in pairs(findAllNearestTorso(endPoint,50)) do
 if v.Parent:FindFirstChildOfClass("Humanoid").MaxHealth >= 9e+99 then
-v:Destroy()
 else
-v.Parent:FindFirstChildOfClass("Humanoid"):TakeDamage(v.Parent:FindFirstChildOfClass("Humanoid").MaxHealth/math.random(120,180))
 end
+
 local Position = mouse.Hit.p
 local Target = v.Position
 local direction = Target - Position
@@ -873,10 +851,9 @@ Part0:Destroy()
 sound(explosionid[math.random(1,#explosionid)],Part0.Position,10,math.random(3,5)/10,500)
 for i,v in pairs(findAllNearestTorso(Part0.Position,160)) do
 if v.Parent:FindFirstChildOfClass("Humanoid").MaxHealth >= 9e+99 then
-v:Destroy()
 else
-v.Parent:FindFirstChildOfClass("Humanoid"):TakeDamage(v.Parent:FindFirstChildOfClass("Humanoid").MaxHealth/(math.random(20,30)/10))
 end
+
 local Position = Part0.Position
 local Target = v.Position
 local direction = Target - Position
@@ -1208,39 +1185,6 @@ end
 end)
 
 
-
---Extras--
-q = char:GetChildren()
-        for u = 1, #q do
-        if q[u].ClassName == "Accessory" or q[u].ClassName == "Hat" then
-                q[u]:remove()
-                elseif q[u].ClassName == "CharacterMesh" then
-                q[u]:remove()
-            elseif q[u].ClassName == "ShirtGraphic" then
-                q[u]:remove()
-    elseif q[u].ClassName == "Shirt" then
-        q[u]:Destroy()
-elseif q[u].ClassName == "Pants" then
-    q[u]:Destroy()
-    end
-end
-local top = Instance.new("Shirt")
-top.ShirtTemplate = "rbxassetid://1042097476"
-top.Parent = char
-local bottom = Instance.new("Pants")
-bottom.PantsTemplate = "rbxassetid://1042097548"
-bottom.Parent = char
- 
-local BodyColors =  char:FindFirstChildOfClass"BodyColors"
-if BodyColors then
-    BodyColors.HeadColor = BrickColor.new"Really black"
-    BodyColors.TorsoColor = BrickColor.new"Really black"
-    BodyColors.LeftArmColor = BrickColor.new"Really black"
-    BodyColors.RightArmColor = BrickColor.new"Really black"
-    BodyColors.LeftLegColor = BrickColor.new"Really black"
-    BodyColors.RightLegColor = BrickColor.new"Really black"
-end
-
 --extras
 local talksound = Instance.new("Sound",char.Torso)
 talksound.SoundId = "rbxassetid://928210219"
@@ -1317,7 +1261,7 @@ chatfunc(msg)
 end
 plr.Chatted:connect(onChatted)
 wait(2)
-chatfunc("ItÂ´s a beatefule night in void..")
+chatfunc("It´s a beatefule night in void..")
 wait(2)
 chatfunc("Black is rising...")
 wait(2)
