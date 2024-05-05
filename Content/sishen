@@ -926,16 +926,6 @@ CV="Magenta"
 	txt.Name = "_status"
 	txt.Size = UDim2.new(2, 0, 1.2, 0)
 	txt.StudsOffset = Vector3.new(-9, 8, 0)
-	local text = Instance.new("TextLabel", txt)
-	text.Size = UDim2.new(10, 0, 7, 0)
-	text.FontSize = "Size24"
-	text.TextScaled = true
-	text.TextTransparency = 0
-	text.BackgroundTransparency = 1 
-	text.TextTransparency = 0
-	text.TextStrokeTransparency = 0
-	text.Font = "Bodoni"
-	text.TextStrokeColor3 = Color3.new(0,0,0)
 
 	v=Instance.new("Part")
 	v.Name = "ColorBrick"
@@ -952,7 +942,6 @@ CV="Magenta"
 	v.Transparency=1
 	text.TextColor3 = Color3.new(170,0,170)
 	v.Shape="Block"
-	text.Text = "我是傻逼，没毛病"
 
 
 
