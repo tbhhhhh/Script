@@ -297,17 +297,10 @@ Stop.MouseButton1Click:Connect(function()
 end)
 --Credit:
 notification:Play()
-game:GetService("StarterGui"):SetCore("SendNotification", {
-	Title = "FEAG";
-	Text = "FEAG已加载，由脚本#2063制作（游戏14_123）";
-	Icon = "";
-	Duration = 10; 
-	Button1 = "是的,先生";
-})
 
 game:GetService("StarterGui"):SetCore("SendNotification", {
 	Title = "提示";
-	Text = "由X脚本提供翻译";
+	Text = "由XA提供翻译";
 	Icon = "";
 	Duration = 10; 
 	Button1 = "好的";
