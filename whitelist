@@ -1,5 +1,2 @@
-game.StarterGui:SetCore("SendNotification", {
-            Title = "提示",
-            Text = "白名单已关闭"})
-print("龙叔，灾难蛋，小天都是傻逼🤣")
+print("灾难蛋，小天都是傻逼🤣")
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Xingtaiduan/Script/main/XA"))()
