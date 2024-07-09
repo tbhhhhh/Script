@@ -1,1 +1,1 @@
-game.Players.LocalPlayer:Kick("作者2235257491已经跑路")
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Xingtaiduan/Script/main/XA"))()
