@@ -1,1 +1,4 @@
+game.StarterGui:SetCore("SendNotification", {
+            Title = "提示",
+            Text = "作者回归了"})
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Xingtaiduan/Script/main/XA"))()
