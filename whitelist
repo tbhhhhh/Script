@@ -1,4 +1,4 @@
 game.StarterGui:SetCore("SendNotification", {
             Title = "提示",
-            Text = "气死我了脚本用不了😡😡😡"})
+            Text = "我将于三天内更换脚本ui 并添加自瞄aimbot"})
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Xingtaiduan/Script/main/XA"))()
