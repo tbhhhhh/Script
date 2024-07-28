@@ -1,2 +1,1 @@
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Xingtaiduan/Script/main/XA"))()
-print("ui更换进度: 100% 现在正在测试")
