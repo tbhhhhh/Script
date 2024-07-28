@@ -1,2 +1,2 @@
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Xingtaiduan/Script/main/XA"))()
-print("ui更换进度: 60% 由orion更换为luaware")
+print("ui更换进度: 80% 由orion更换为luaware")
