@@ -7,4 +7,3 @@ loadstring(game:HttpGet("https://rentry.co/XA-Beta/raw"))()
     Fluxus,
     Vega X
 ..etc
-It's FREE
