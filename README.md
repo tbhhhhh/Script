@@ -7,3 +7,5 @@ loadstring(game:HttpGet("https://rentry.co/XA-Beta/raw"))()
     Fluxus,
     Vega X
 ..etc
+## Features
+It's FREE and easy to use, supports four games. Works on Mobile/PC.
