@@ -3,6 +3,7 @@
 loadstring(game:HttpGet("https://rentry.co/XA-Beta/raw"))()
 ```
 * SupportedExecutors
-    Arceus X
+    > Arsenal 
     Fluxus
-    Vega X..etc
+    Vega X
+..etc
