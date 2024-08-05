@@ -1,4 +1,5 @@
 # XA Hub
+## Loader
 ```lua
 loadstring(game:HttpGet("https://rentry.co/XA-Beta/raw"))()
 ```
