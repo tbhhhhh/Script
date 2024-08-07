@@ -5,7 +5,7 @@ loadstring(game:HttpGet("https://rentry.co/XA-Beta/raw"))()
 ```
 * Supported Executors
     > Arceus X,
-    Fluxus
+    Fluxus,
     Delta,
     Vega X
 ..etc
