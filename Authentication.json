@@ -2,6 +2,7 @@
     "XAHub": {
         "ver": "Alpha-3.3.5",
         "status": "working",
+        "verification": true
     },
     "Whitelist": {
         "status": false
