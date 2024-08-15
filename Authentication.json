@@ -1,9 +1,9 @@
 {
     "XAHub": {
         "ver": "Alpha-3.3.6",
-        "status": "updating"
+        "status": "working"
     },
     "Whitelist": {
-        "status": false
+        "status": true
     }
 }
