@@ -10,4 +10,4 @@ loadstring(game:HttpGet("https://rentry.co/XA-Beta/raw"))()
     Vega X
 ..etc
 ## Features
-It's FREE and easy to use, supports many games. Works on Mobile/PC(You need an good executor btw).
+It's FREE and easy to use, supports many games. Works on Mobile/PC(You need a good executor BTW).
