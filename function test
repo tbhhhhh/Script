@@ -1,0 +1,18 @@
+for Index, Value in pairs(getgenv()) do
+    if type(Value) == "function" then
+        print(Index)
+    elseif type(Value) == "table" then
+        warn(Index)
+    else
+        warn("❎",Index)
+    end
+end
+
+--[[local restorefunction = restorefunction or restorefunc or restoreclosure
+
+if restorefunction then
+print("restorefunction true")
+else
+warn("restorefunction false")
+end
+]]
