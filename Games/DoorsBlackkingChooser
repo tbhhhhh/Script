@@ -1,1 +1,1 @@
-loadstring(game:HttpGet("https://raw.githubusercontent.com/Xingtaiduan/Script/refs/heads/main/Games/DoorsBlackkingOld"))()
+game.StarterGui:SetCore("SendNotification", {Title = "提示",Text = "脚本等待更新"})
