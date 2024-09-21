@@ -1,1 +1,0 @@
-game.StarterGui:SetCore("SendNotification", {Title = "提示",Text = "脚本等待更新"})
