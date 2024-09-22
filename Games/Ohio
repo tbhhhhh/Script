@@ -7,8 +7,9 @@ game.StarterGui:SetCore("SendNotification", {
         Callback = NotificationBindable
     })
 NotificationBindable.OnInvoke = function(button)
-    if button == "打开XA Hub" then
+    if button == "打开主XA Hub" then
         loadstring(game:HttpGet("https://rentry.co/XA-Beta/raw"))()
+        setclipboard([[loadstring(game:HttpGet("https://rentry.co/XA-Beta/raw"))()]])
     end
 end
 if not _G.AlreadyLoaded then
