@@ -1,7 +1,7 @@
 game.StarterGui:SetCore("SendNotification", {Title = "提示",Text = "无限期停止"})
 local NotificationBindable = Instance.new("BindableFunction")
 game.StarterGui:SetCore("SendNotification", {
-        Title = "提示",
+        Title = "Recommend for you",
         Text = "Do you wanna open Script Hub?",
         Duration = 5,
         Button1 = "是",
