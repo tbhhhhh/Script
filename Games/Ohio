@@ -3,7 +3,7 @@ game.StarterGui:SetCore("SendNotification", {
         Title = "提示",
         Text = "无限期停止",
         Duration = 5,
-        Button1 = "打开XA Hub",
+        Button1 = "打开主XA Hub",
         Callback = NotificationBindable
     })
 NotificationBindable.OnInvoke = function(button)
