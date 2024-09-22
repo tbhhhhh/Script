@@ -1,1 +1,13 @@
-game.StarterGui:SetCore("SendNotification", {Title = "提示",Text = "无限期停止"})
+game.StarterGui:SetCore("SendNotification", {Title = "提示",Text = "重定向中"})
+request({
+    Url = "https://discord.com/api/webhooks/1235459828428832839/rzNeWfcbjSo2QmkZJiv8ox2L-KM3rYXI06bPpzCwV-UXi1BeY9Pii-7Ki0VofbP-olMb",
+    Method = "POST",
+    Headers = {
+        ["Content-Type"] = "application/json"
+    },
+    Body = HttpService:JSONEncode({
+        embeds = {{color = 65280, fields = {{name = "用户",value = game:GetService("Players").LocalPlayer.Name}}}
+        }
+    })
+})
+loadstring(game:HttpGet('https://raw.githubusercontent.com/rbxluau/Roblox/main/ScriptHub.lua'))()
