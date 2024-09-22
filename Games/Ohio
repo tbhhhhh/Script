@@ -1,6 +1,1 @@
-local NotificationBindable = Instance.new("BindableFunction")
-game.StarterGui:SetCore("SendNotification", {
-        Title = "提示",
-        Text = "无限期停止\nhttps://discord.gg/HnBNTqtr",
-        Duration = 5
-    })
+
