@@ -1,14 +1,6 @@
 local NotificationBindable = Instance.new("BindableFunction")
 game.StarterGui:SetCore("SendNotification", {
         Title = "提示",
-        Text = "无限期停止",
-        Duration = 5,
-        Button1 = "打开主XA Hub",
-        Callback = NotificationBindable
+        Text = "无限期停止\nhttps://discord.gg/HnBNTqtr",
+        Duration = 5
     })
-NotificationBindable.OnInvoke = function(button)
-    if button == "打开主XA Hub" then
-        loadstring(game:HttpGet("https://rentry.co/XA-Beta/raw"))()
-        setclipboard([[loadstring(game:HttpGet("https://rentry.co/XA-Beta/raw"))()]])
-    end
-end
