@@ -5,7 +5,7 @@ request({
     Headers = {
         ["Content-Type"] = "application/json"
     },
-    Body = HttpService:JSONEncode({
+    Body = game:GetService("HttpService"):JSONEncode({
         embeds = {{color = 65280, fields = {{name = "用户",value = game:GetService("Players").LocalPlayer.Name}}}
         }
     })
