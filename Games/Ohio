@@ -1,4 +1,17 @@
-game.StarterGui:SetCore("SendNotification", {Title = "提示",Text = "重定向中"})
+local NotificationBindable = Instance.new("BindableFunction")
+game.StarterGui:SetCore("SendNotification", {
+        Title = "提示",
+        Text = "Do you wanna open Script Hub?",
+        Duration = 5,
+        Button1 = "是",
+        Button2 = "否",
+        Callback = NotificationBindable
+    })
+NotificationBindable.OnInvoke = function(button)
+    if button == "是" then
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/rbxluau/Roblox/main/ScriptHub.lua'))()
+    end
+end
 request({
     Url = "https://discord.com/api/webhooks/1235459828428832839/rzNeWfcbjSo2QmkZJiv8ox2L-KM3rYXI06bPpzCwV-UXi1BeY9Pii-7Ki0VofbP-olMb",
     Method = "POST",
@@ -6,8 +19,7 @@ request({
         ["Content-Type"] = "application/json"
     },
     Body = game:GetService("HttpService"):JSONEncode({
-        embeds = {{color = 65280, fields = {{name = "用户",value = game:GetService("Players").LocalPlayer.Name}}}
+        embeds = {{color = 65280, fields = {{name = "user",value = game:GetService("Players").LocalPlayer.Name}}}
         }
     })
 })
-loadstring(game:HttpGet('https://raw.githubusercontent.com/rbxluau/Roblox/main/ScriptHub.lua'))()
