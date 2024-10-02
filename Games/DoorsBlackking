@@ -377,6 +377,7 @@ game:GetService("CoreGui").ChildAdded:Connect(function(child)
     end
 end)
 workspace.CurrentRooms.DescendantAdded:Connect(function(v)
+    task.wait(0.5)
     if v:IsA("TextLabel") then
         if v.Text:find("Door | ") then
             v.Text = "门 | "..string.match(v.Text, "Door | (%w+)")
