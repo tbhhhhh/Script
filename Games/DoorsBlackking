@@ -376,8 +376,22 @@ game:GetService("CoreGui").ChildAdded:Connect(function(child)
         child.DescendantAdded:Connect(main)
     end
 end)
+--fps
+local lastTime = tick()
+local frames = 0
+game:GetService("RunService").RenderStepped:Connect(function()
+    frames = frames + 1
+    local currentTime = tick()
+    if currentTime - lastTime >= 1 then
+        frames = 0
+        lastTime = currentTime
+    end
+end)
+--esp
 workspace.CurrentRooms.DescendantAdded:Connect(function(v)
-    task.wait(0.7)
+    if frames < 15 then
+        task.wait(1)
+    end
     if v:IsA("TextLabel") then
         if v.Text:find("Door | ") then
             v.Text = "门 | "..string.match(v.Text, "Door | (%w+)")
