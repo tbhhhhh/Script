@@ -376,7 +376,7 @@ game:GetService("CoreGui").ChildAdded:Connect(function(child)
         child.DescendantAdded:Connect(main)
     end
 end)
---fps
+--[[
 local lastTime = tick()
 local frames = 0
 game:GetService("RunService").RenderStepped:Connect(function()
@@ -401,6 +401,6 @@ workspace.CurrentRooms.DescendantAdded:Connect(function(v)
             v.Text = espname[v.Text]
         end
     end
-end)
+end)]]
 task.wait()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/DarkDoorsKing/Doors/main/Main"))()
