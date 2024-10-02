@@ -1,3 +1,7 @@
+game.StarterGui:SetCore("SendNotification", {
+Title = "优化",
+Text = "修复150门卡顿被seek抓住"})
+
 local name = {
 ["BlackKing : Loading Gui"] = "BlackKing : 加载Gui中",
 ["Functions"] = "功能",
