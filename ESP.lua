@@ -126,9 +126,7 @@ local function removeEsp(player)
 
     for _, drawing in pairs(esp) do
         if type(drawing) == "table" then
-            for _, line in pairs(drawing) do
-                line:Remove()
-            end
+            return
         else
             drawing:Remove()
         end
