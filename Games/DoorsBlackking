@@ -193,7 +193,7 @@ local name = {
 ["Anti Lag Light"] = "防滞后灯",
 ["Anti Lag Seek Chase"] = "防Seek追逐战滞后",
 ["Anti Lag On Seek Chase"] = "在Seek追逐战防滞后",
-["Auto Hide"] = "自动隐藏(无效)",
+["Auto Hide"] = "自动隐藏(已修复)",
 ["Auto Loot"] = "自动搜刮物品",
 ["Enable Interact"] = "启用交互",
 ["Door Reach"] = "增加开门范围",
@@ -226,6 +226,10 @@ local name = {
 ["Stop Reset Character"] = "停止重置人物",
 ["real dead [22 - 25 sec]"] = "真实死亡 [22 - 25 秒]",
 ["real dead [Stop]"] = "真实死亡 [停止]",
+["Anti Seek Obstructions"] = "防Seek障碍物",
+["Anti Seek Arms/Fire Damage"] = "防Seek手臂/火焰伤害",
+["Auto Skip Halt"] = "自动跳过Halt",
+["Auto Skip Halt Room"] = "自动跳过Halt房间"
 }
 
 local espname ={
