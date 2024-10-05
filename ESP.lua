@@ -125,7 +125,13 @@ local function removeEsp(player)
     if not esp then return end
 
     for _, drawing in pairs(esp) do
-        drawing:Remove()
+        if type(drawing) == "table" then
+            for _, line in pairs(drawing) do
+                line:Remove()
+            end
+        else
+            drawing:Remove()
+        end
     end
 
     cache[player] = nil
