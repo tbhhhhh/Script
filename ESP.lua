@@ -124,11 +124,17 @@ local function removeEsp(player)
     local esp = cache[player]
     if not esp then return end
 
-    for _, drawing in pairs(esp) do
-        if type(drawing) == "table" then
-            return
-        else
+    for key, drawing in pairs(esp) do
+        if drawing.Remove then
             drawing:Remove()
+        elseif key == "boxLines" then
+            for _, line in ipairs(drawing) do
+                if line.Remove then
+                    line:Remove()
+                end
+            end
+        else
+            print("No Remove method for", key)
         end
     end
 
