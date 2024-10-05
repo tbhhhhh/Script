@@ -1,3 +1,4 @@
+--Open Source
 local name = {
 ["BlackKing : Loading Gui"] = "BlackKing : 加载Gui中",
 ["Functions"] = "功能",
@@ -229,7 +230,10 @@ local name = {
 ["Anti Seek Obstructions"] = "防Seek障碍物",
 ["Anti Seek Arms/Fire Damage"] = "防Seek手臂/火焰伤害",
 ["Auto Skip Halt"] = "自动跳过Halt",
-["Auto Skip Halt Room"] = "自动跳过Halt房间"
+["Auto Skip Halt Room"] = "自动跳过Halt房间",
+["Crucifix [Rush]"] = "十字架 [Rush]",
+["infinite Crucifix (No Anti Cheat)"] = "无限十字架 (没有反作弊)",
+["Crucifix [Ambush]"] = "十字架 [Ambush]"
 }
 
 local espname ={
