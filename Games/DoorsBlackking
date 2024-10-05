@@ -261,112 +261,90 @@ local function main(v)
         end
         if v.Text == "Speed Boost : 6" then
             v.Text = "速度提升 : 6"
-            v.Changed:Connect(function(prop)
-                if prop == "Text" then
-                    textnumber = string.match(v.Text, "Speed Boost : (%w+)")
-                    if textnumber then
-                        v.Text = "速度提升 : "..textnumber
-                    end
+            v:GetPropertyChangedSignal("Text"):Connect(function()
+                textnumber = string.match(v.Text, "Speed Boost : (%w+)")
+                if textnumber then
+                    v.Text = "速度提升 : "..textnumber
                 end
             end)
         elseif v.Text == "Max Slope Angle : 49" then
             v.Text = "最大倾斜角 : 49"
-            v.Changed:Connect(function(prop)
-                if prop == "Text" then
-                    textnumber = string.match(v.Text, "Max Slope Angle : (%w+)")
-                    if textnumber then
-                        v.Text = "最大倾斜角 : "..textnumber
-                    end
+            v:GetPropertyChangedSignal("Text"):Connect(function()
+                textnumber = string.match(v.Text, "Max Slope Angle : (%w+)")
+                if textnumber then
+                    v.Text = "最大倾斜角 : "..textnumber
                 end
             end)
         elseif v.Text == "Field of View : 70" then
             v.Text = "视野 : 70"
-            v.Changed:Connect(function(prop)
-                if prop == "Text" then
-                    textnumber = string.match(v.Text, "Field of View : (%w+)")
-                    if textnumber then
-                        v.Text = "视野 : "..textnumber
-                    end
+            v:GetPropertyChangedSignal("Text"):Connect(function()
+                textnumber = string.match(v.Text, "Field of View : (%w+)")
+                if textnumber then
+                    v.Text = "视野 : "..textnumber
                 end
             end)
         elseif v.Text == "DistanceZoom : 10" then
             v.Text = "缩放距离 : 10"
-            v.Changed:Connect(function(prop)
-                if prop == "Text" then
-                    textnumber = string.match(v.Text, "DistanceZoom : (%w+)")
-                    if textnumber then
-                        v.Text = "缩放距离 : "..textnumber
-                    end
+            v:GetPropertyChangedSignal("Text"):Connect(function()
+                textnumber = string.match(v.Text, "DistanceZoom : (%w+)")
+                if textnumber then
+                    v.Text = "缩放距离 : "..textnumber
                 end
             end)
         elseif v.Text == "Max Interact Distance : 14.5" then
             v.Text = "最大交互距离 : 14.5"
-            v.Changed:Connect(function(prop)
-                if prop == "Text" then
-                    textnumber = string.match(v.Text, "Max Interact Distance : (%w+.%w+)") or string.match(v.Text, "Max Interact Distance : (%w+)")
-                    if textnumber then
-                        v.Text = "最大交互距离 : "..textnumber
-                    end
+            v:GetPropertyChangedSignal("Text"):Connect(function()
+                textnumber = string.match(v.Text, "Max Interact Distance : (%w+.%w+)") or string.match(v.Text, "Max Interact Distance : (%w+)")
+                if textnumber then
+                    v.Text = "最大交互距离 : "..textnumber
                 end
             end)
         elseif v.Text == "Auto Hide Delay : 1" then
             v.Text = "自动隐藏延迟 : 1"
-            v.Changed:Connect(function(prop)
-                if prop == "Text" then
-                    textnumber = string.match(v.Text, "Auto Hide Delay : (%w+.%w+)") or string.match(v.Text, "Auto Hide Delay : (%w+)")
-                    if textnumber then
-                        v.Text = "自动隐藏延迟 : "..textnumber
-                    end
+            v:GetPropertyChangedSignal("Text"):Connect(function()
+                textnumber = string.match(v.Text, "Auto Hide Delay : (%w+.%w+)") or string.match(v.Text, "Auto Hide Delay : (%w+)")
+                if textnumber then
+                    v.Text = "自动隐藏延迟 : "..textnumber
                 end
             end)
         elseif v.Text == "Number of items: 1" then
             v.Text = "物品数量 : 1"
-            v.Changed:Connect(function(prop)
-                if prop == "Text" then
-                    textnumber = string.match(v.Text, "Number of items: (%w+)")
-                    if textnumber then
-                        v.Text = "物品数量 : "..textnumber
-                    end
+            v:GetPropertyChangedSignal("Text"):Connect(function()
+                textnumber = string.match(v.Text, "Number of items: (%w+)")
+                if textnumber then
+                    v.Text = "物品数量 : "..textnumber
                 end
             end)
         elseif v.Text == "FillTransparency : 0.9" then
             v.Text = "填充透明度 : 0.9"
-            v.Changed:Connect(function(prop)
-                if prop == "Text" then
-                    textnumber = string.match(v.Text, "FillTransparency : (%w+.%w+)") or string.match(v.Text, "FillTransparency : (%w+)")
-                    if textnumber then
-                        v.Text = "填充透明度 : "..textnumber
-                    end
+            v:GetPropertyChangedSignal("Text"):Connect(function()
+                textnumber = string.match(v.Text, "FillTransparency : (%w+.%w+)") or string.match(v.Text, "FillTransparency : (%w+)")
+                if textnumber then
+                    v.Text = "填充透明度 : "..textnumber
                 end
             end)
         elseif v.Text == "OutlineTransparency : 0" then
             v.Text = "边框透明度 : 0"
-            v.Changed:Connect(function(prop)
-                if prop == "Text" then
-                    textnumber = string.match(v.Text, "OutlineTransparency : (%w+.%w+)") or string.match(v.Text, "OutlineTransparency : (%w+)")
-                    if textnumber then
-                        v.Text = "边框透明度 : "..textnumber
-                    end
+            v:GetPropertyChangedSignal("Text"):Connect(function()
+                textnumber = string.match(v.Text, "OutlineTransparency : (%w+.%w+)") or string.match(v.Text, "OutlineTransparency : (%w+)")
+                if textnumber then
+                    v.Text = "边框透明度 : "..textnumber
                 end
             end)
         elseif v.Text == "Time : 5" then
             v.Text = "时间 : 5"
-            v.Changed:Connect(function(prop)
-                if prop == "Text" then
-                    textnumber = string.match(v.Text, "Time : (%w+)")
-                    if textnumber then
-                        v.Text = "时间 : "..textnumber
-                    end
+            v:GetPropertyChangedSignal("Text"):Connect(function()
+                textnumber = string.match(v.Text, "Time : (%w+)")
+                if textnumber then
+                    v.Text = "时间 : "..textnumber
                 end
             end)
         elseif v.Text == "CaptionVolume : 5" then
             v.Text = "说明文字音量 : 5"
-            v.Changed:Connect(function(prop)
-                if prop == "Text" then
-                    textnumber = string.match(v.Text, "CaptionVolume : (%w+)")
-                    if textnumber then
-                        v.Text = "说明文字音量 : "..textnumber
-                    end
+            v:GetPropertyChangedSignal("Text"):Connect(function()
+                textnumber = string.match(v.Text, "CaptionVolume : (%w+)")
+                if textnumber then
+                    v.Text = "说明文字音量 : "..textnumber
                 end
             end)
         end
