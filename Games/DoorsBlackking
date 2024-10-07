@@ -233,7 +233,11 @@ local name = {
 ["Crucifix [Rush]"] = "十字架 [Rush]",
 ["infinite Crucifix (No Anti Cheat)"] = "无限十字架 (没有反作弊)",
 ["Crucifix [Ambush]"] = "十字架 [Ambush]",
-["End"] = "结束"
+["End"] = "结束",
+["[Event Notification] : Eyes has Spawn Avoid looking at it!"] = "[事件通知] : Eyes已生成避免看他",
+["[Event Notification] : Rush Is Coming Find Hide Spot!"] = "[事件通知] : Rush正在靠近寻找隐藏点!",
+["Auto Hide : Auto Hide Working!"] = "自动隐藏 : 自动隐藏有效!",
+["Auto Hide : Don't Move"] = "自动隐藏 : 不要移动"
 }
 
 local espname ={
@@ -258,8 +262,7 @@ local function main(v)
     if v:IsA("TextLabel") then
         if name[v.Text] then
             v.Text = name[v.Text]
-        end
-        if v.Text == "Speed Boost : 6" then
+        elseif v.Text == "Speed Boost : 6" then
             v.Text = "速度提升 : 6"
             v:GetPropertyChangedSignal("Text"):Connect(function()
                 textnumber = string.match(v.Text, "Speed Boost : (%w+)")
@@ -347,6 +350,8 @@ local function main(v)
                     v.Text = "说明文字音量 : "..textnumber
                 end
             end)
+        else
+            warn(v.Text)
         end
     end
     if v:IsA("TextButton") then
