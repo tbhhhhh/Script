@@ -133,8 +133,6 @@ local function removeEsp(player)
                     line:Remove()
                 end
             end
-        else
-            print("No Remove method for", key)
         end
     end
 
