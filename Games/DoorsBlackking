@@ -221,8 +221,8 @@ local name = {
 ["Select Backpack"] = "选择背包",
 ["Use tool"] = "使用工具",
 ["Use Select Player Tool"] = "使用已选择玩家工具",
-["Spam Tool"] = "Spam工具",
-["Spam Select Player Tool"] = "Spam已选择玩家工具",
+["Spam Tool"] = "循环使用工具",
+["Spam Select Player Tool"] = "循环使用已选择玩家工具",
 ["Stop Reset Character"] = "停止重置人物",
 ["real dead [22 - 25 sec]"] = "真实死亡 [22 - 25 秒]",
 ["real dead [Stop]"] = "真实死亡 [停止]",
@@ -237,10 +237,16 @@ local name = {
 ["[Event Notification] : Eyes has Spawn Avoid looking at it!"] = "[事件通知] : Eyes已生成避免看他",
 ["[Event Notification] : Rush Is Coming Find Hide Spot!"] = "[事件通知] : Rush正在靠近寻找隐藏点!",
 ["Auto Hide : Auto Hide Working!"] = "自动隐藏 : 自动隐藏有效!",
-["Auto Hide : Don't Move"] = "自动隐藏 : 不要移动"
+["Auto Hide : Don't Move"] = "自动隐藏 : 不要移动",
+["GodMode"] = "上帝模式",
+["Visuals"] = "视觉",
+["Teleport Door"] = "移除门",
+["Teleport The Door"] = "移除门",
+["Spam Equip self"] = "循环装备工具",
+["Spam Equip Tool self"] = "循环装备工具"
 }
 
-local espname ={
+local espname = {
 ["Dupe / Fake Door"] = "Dupe / 假门",
 ["Lever"] = "拉杆",
 ["Candle"] = "蜡烛",
@@ -258,7 +264,13 @@ local espname ={
 ["WaterPump"] = "水泵"
 }
 
+local floor = game:GetService("ReplicatedStorage"):WaitForChild("GameData"):WaitForChild("Floor")
 local function main(v)
+    if floor.Value == "Fools" then
+        if v:IsA("TextLabel") or v:IsA("TextButton") then
+            repeat task.wait() until v.Text ~= "Label"
+        end
+    end
     if v:IsA("TextLabel") then
         if name[v.Text] then
             v.Text = name[v.Text]
@@ -350,6 +362,22 @@ local function main(v)
                     v.Text = "说明文字音量 : "..textnumber
                 end
             end)
+        elseif v.Text == "Teleport Delay : 0.5" then
+            v.Text = "传送延迟 : 0.5"
+            v:GetPropertyChangedSignal("Text"):Connect(function()
+                textnumber = string.match(v.Text, "Teleport Delay : (%w+.%w+)") or string.match(v.Text, "Teleport Delay : (%w+)")
+                if textnumber then
+                    v.Text = "传送延迟 : "..textnumber
+                end
+            end)
+        elseif v.Text == "Drop Delay : 0.25" then
+            v.Text = "丢弃延迟 : 0.25"
+            v:GetPropertyChangedSignal("Text"):Connect(function()
+                textnumber = string.match(v.Text, "Drop Delay : (%w+.%w+)") or string.match(v.Text, "Drop Delay : (%w+)")
+                if textnumber then
+                    v.Text = "丢弃延迟 : "..textnumber
+                end
+            end)
         else
             warn(v.Text)
         end
@@ -362,33 +390,17 @@ local function main(v)
         end
     end
 end
-game:GetService("CoreGui").ChildAdded:Connect(function(child)
+Connect = game:GetService("CoreGui").ChildAdded:Connect(function(child)
     if child.Name == "BlackkingGui" then
+        Connect:Disconnect()
         child.DescendantAdded:Connect(main)
     end
 end)
 --[[
-local lastTime = tick()
-local frames = 0
-game:GetService("RunService").RenderStepped:Connect(function()
-    frames = frames + 1
-    local currentTime = tick()
-    if currentTime - lastTime >= 1 then
-        frames = 0
-        lastTime = currentTime
-    end
-end)
 --esp
 workspace.CurrentRooms.DescendantAdded:Connect(function(v)
-    if frames < 15 then
-        task.wait(1)
-    end
     if v:IsA("TextLabel") then
-        if v.Text:find("Door | ") then
-            v.Text = "门 | "..string.match(v.Text, "Door | (%w+)")
-        elseif v.Text:find("Door %[Lock] | ") then
-            v.Text = "门 [上锁] | "..string.match(v.Text, "Door %[Lock] | (%w+)")
-        elseif espname[v.Text] then
+        if espname[v.Text] then
             v.Text = espname[v.Text]
         end
     end
