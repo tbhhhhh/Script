@@ -354,12 +354,12 @@ local function main(v)
                     v.Text = "时间 : "..textnumber
                 end
             end)
-        elseif v.Text == "CaptionVolume : 5" then
-            v.Text = "说明文字音量 : 5"
+        elseif v.Text == "Volume : 5" then
+            v.Text = "音量 : 5"
             v:GetPropertyChangedSignal("Text"):Connect(function()
-                textnumber = string.match(v.Text, "CaptionVolume : (%w+)")
+                textnumber = string.match(v.Text, "Volume : (%w+)")
                 if textnumber then
-                    v.Text = "说明文字音量 : "..textnumber
+                    v.Text = "音量 : "..textnumber
                 end
             end)
         elseif v.Text == "Teleport Delay : 0.5" then
