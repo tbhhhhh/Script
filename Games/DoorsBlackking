@@ -243,7 +243,104 @@ local name = {
 ["Teleport Door"] = "移除门",
 ["Teleport The Door"] = "移除门",
 ["Spam Equip self"] = "循环装备工具",
-["Spam Equip Tool self"] = "循环装备工具"
+["Spam Equip Tool self"] = "循环装备工具",
+["BlackKing | DOORS Lobby"] = "BlackKing | DOORS 大厅",
+["Main"] = "主要的",
+["Achievements"] = "成就",
+["Cycle Achievements"] = "循环成就",
+["Elevator"] = "电梯",
+["Auto Join Elevator"] = "自动加入电梯",
+["Friends Only"] = "仅限朋友",
+["Create Retro Elevator"] = "创建复古电梯",
+["RetroMode"] = "复古模式",
+["Broken Elevators Doors"] = "损坏电梯门",
+["Animation"] = "动画",
+["Stop Animation"] = "停止动画",
+["Enable Loop"] = "开启循环",
+["Loop Animation"] = "循环动画",
+["Elevator Animation Character1"] = "电梯动画角色1",
+["Play Elevator [Hotel]"] = "播放电梯 [酒店]",
+["Elevator Animation Character2"] = "电梯动画角色2",
+["Elevator Animation Character3"] = "电梯动画角色3",
+["Elevator Animation Character4"] = "电梯动画角色4",
+["Elevator Animation Old"] = "旧电梯动画",
+["Play Old [Hotel]"] = "播放旧的 [酒店]",
+["Animation Character1"] = "动画角色1",
+["Play [Mines]"] = "播放 [Mines]",
+["Animation Character2"] = "动画角色2",
+["Animation Character3"] = "动画角色3",
+["Animation Character4"] = "动画角色4",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = "",
+[""] = ""
 }
 
 local espname = {
@@ -378,8 +475,24 @@ local function main(v)
                     v.Text = "丢弃延迟 : "..textnumber
                 end
             end)
+        elseif v.Text == "LoopDelay : 0" then
+            v.Text = "循环延迟 : 0"
+            v:GetPropertyChangedSignal("Text"):Connect(function()
+                textnumber = string.match(v.Text, "LoopDelay : (%w+.%w+)") or string.match(v.Text, "LoopDelay : (%w+)")
+                if textnumber then
+                    v.Text = "循环延迟 : "..textnumber
+                end
+            end)
+        elseif v.Text == "MaxPlayers : 12" then
+            v.Text = "最大玩家 : 12"
+            v:GetPropertyChangedSignal("Text"):Connect(function()
+                textnumber = string.match(v.Text, "MaxPlayers : (%w+)")
+                if textnumber then
+                    v.Text = "最大玩家 : "..textnumber
+                end
+            end)
         else
-            warn(v.Text)
+            --appendfile("1.txt", v.Text.."\n\n")
         end
     end
     if v:IsA("TextButton") then
