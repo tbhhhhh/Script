@@ -302,17 +302,17 @@ local name = {
 ["Your Lookman Chat Notify"] = "你的Lookman聊天通知",
 ["GodMode = true!"] = "上帝模式已开启",
 ["GodMode = false!"] = "上帝模式已关闭",
-[""] = "",
-[""] = "",
-[""] = "",
-[""] = "",
-[""] = "",
-[""] = "",
-[""] = "",
-[""] = "",
-[""] = "",
-[""] = "",
-[""] = "",
+["Anti Seek Flood"] = "防Seek洪水",
+["Anti SeekFlood"] = "防Seek洪水",
+["Anti KillBrick"] = "防KillBrick",
+["Anti KillBrick From Seek Chase"] = "防来自Seek追逐战的KillBrick",
+["Anti Giggle"] = "防Giggle",
+["Anti GiggleCeiling"] = "防GiggleCeiling",
+["Interact Ladder"] = "互动梯子",
+["Defaultt"] = "默认",
+["Interact Ladder to Bypass Anti Cheat"] = "互动梯子以绕过反作弊",
+["Bypass Anti Cheat is Disabled"] = "绕过反作弊已关闭",
+["[Event Notification] : Seek Chase GoodLuck!"] = "[事件通知] : Seek追逐战祝你好运!",
 [""] = "",
 [""] = "",
 [""] = "",
@@ -497,6 +497,14 @@ local function main(v)
                 textnumber = string.match(v.Text, "TextSize : (%w+)")
                 if textnumber then
                     v.Text = "文本大小 : "..textnumber
+                end
+            end)
+        elseif v.Text == "Done Anchor Solver Loop : 4" then
+            v.Text = "完成锚点解决器循环 : 4"
+            v:GetPropertyChangedSignal("Text"):Connect(function()
+                textnumber = string.match(v.Text, "Done Anchor Solver Loop : (%w+)")
+                if textnumber then
+                    v.Text = "完成锚点解决器循环 : "..textnumber
                 end
             end)
         else
