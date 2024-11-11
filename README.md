@@ -1,4 +1,4 @@
-# XA Hub Beta
+# XA Hub Beta 暂时停更
 ## Loader
 ```lua
 loadstring(game:HttpGet("https://rentry.co/XA-Beta/raw"))()
