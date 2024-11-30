@@ -11,6 +11,7 @@
 --[[
 
   Modification Made By - REDz
+  汉化 By 外星人 QQ：2235257491
   
 ]]
 
@@ -2249,16 +2250,16 @@ end
             - codebox: (Instance (TextBox)) the textbox that holds all the code- cleared often
 ]]
 -- Copies the contents of the codebox
-newButton("Copy Code", function()
-	return "Click to copy code"
+newButton("复制代码", function()
+	return "点击以复制代码"
 end, function()
 	setclipboard(codebox:getString())
 	TextLabel.Text = "Copied successfully!"
 end)
 
 --- Copies the source script (that fired the remote)
-newButton("Copy Remote", function()
-	return "Click to copy the path of the remote"
+newButton("复制Remote", function()
+	return "点击以复制remote的路径"
 end, function()
 	if selected then
 		setclipboard(v2s(selected.Remote.remote))
@@ -2267,8 +2268,8 @@ end, function()
 end)
 
 -- Executes the contents of the codebox through loadstring
-newButton("Run Code", function()
-	return "Click to execute code"
+newButton("执行代码", function()
+	return "点击以执行代码"
 end, function()
 	local orText = "Click to execute code"
 	TextLabel.Text = "Executing..."
@@ -2283,8 +2284,8 @@ end, function()
 end)
 
 --- Gets the calling script (not super reliable but w/e)
-newButton("Get Script", function()
-	return "Click to copy calling script to clipboard\nWARNING: Not super reliable, nil == could not find"
+newButton("复制调用脚本", function()
+	return "点击以复制调用的脚本\n警告: 不太可靠, nil == 未找到"
 end, function()
 	if selected then
 		setclipboard(SimpleSpy:ValueToString(selected.Source))
@@ -2293,8 +2294,8 @@ end, function()
 end)
 
 --- Decompiles the script that fired the remote and puts it in the code box
-newButton("Function Info", function()
-	return "Click to view calling function information"
+newButton("Function信息", function()
+	return "点击以查看function信息"
 end, function()
 	if selected then
 		if selected.Function then
@@ -2307,8 +2308,8 @@ end, function()
 end)
 
 --- Clears the Remote logs
-newButton("Clr Logs", function()
-	return "Click to clear logs"
+newButton("清除记录", function()
+	return "点击以清除记录"
 end, function()
 	TextLabel.Text = "Clearing..."
 	logs = {}
@@ -2323,8 +2324,8 @@ end, function()
 end)
 
 --- Excludes the selected.Log Remote from the RemoteSpy
-newButton("Exclude (i)", function()
-	return "Click to exclude this Remote.\nExcluding a remote makes SimpleSpy ignore it, but it will continue to be usable."
+newButton("排除 (i)", function()
+	return "点击以排除这个Remote.\n排除一个remote使SimpleSpy忽略它, 但它将继续可用"
 end, function()
 	if selected then
 		blacklist[selected.Remote.remote] = true
@@ -2333,8 +2334,8 @@ end, function()
 end)
 
 --- Excludes all Remotes that share the same name as the selected.Log remote from the RemoteSpy
-newButton("Exclude (n)", function()
-	return "Click to exclude all remotes with this name.\nExcluding a remote makes SimpleSpy ignore it, but it will continue to be usable."
+newButton("排除 (n)", function()
+	return "点击以排除所有具有此名称的remotes.\n排除一个remote使SimpleSpy忽略它, 但它将继续可用"
 end, function()
 	if selected then
 		blacklist[selected.Name] = true
@@ -2343,16 +2344,16 @@ end, function()
 end)
 
 --- clears blacklist
-newButton("Clr Blacklist", function()
-	return "Click to clear the blacklist.\nExcluding a remote makes SimpleSpy ignore it, but it will continue to be usable."
+newButton("清除排除列表", function()
+	return "点击以清除排除名单"
 end, function()
 	blacklist = {}
 	TextLabel.Text = "Blacklist cleared!"
 end)
 
 --- Prevents the selected.Log Remote from firing the server (still logged)
-newButton("Block (i)", function()
-	return "Click to stop this remote from firing.\nBlocking a remote won't remove it from SimpleSpy logs, but it will not continue to fire the server."
+newButton("拦截 (i)", function()
+	return "点击以停止这个remote触发.\n拦截一个remote不会在SimpleSpy记录中移除它, 但它将不会触发."
 end, function()
 	if selected then
 		if selected.Remote.remote then
@@ -2365,8 +2366,8 @@ end, function()
 end)
 
 --- Prevents all remotes from firing that share the same name as the selected.Log remote from the RemoteSpy (still logged)
-newButton("Block (n)", function()
-	return "Click to stop remotes with this name from firing.\nBlocking a remote won't remove it from SimpleSpy logs, but it will not continue to fire the server."
+newButton("拦截 (n)", function()
+	return "点击以停止所有具有此名称的remotes触发.\n拦截一个remote不会在SimpleSpy记录中移除它, 但它将不会触发."
 end, function()
 	if selected then
 		blocklist[selected.Name] = true
@@ -2375,16 +2376,16 @@ end, function()
 end)
 
 --- clears blacklist
-newButton("Clr Blocklist", function()
-	return "Click to stop blocking remotes.\nBlocking a remote won't remove it from SimpleSpy logs, but it will not continue to fire the server."
+newButton("清除拦截列表", function()
+	return "点击以清除拦截列表"
 end, function()
 	blocklist = {}
 	TextLabel.Text = "Blocklist cleared!"
 end)
 
 --- Attempts to decompile the source script
-newButton("Decompile", function()
-	return "Attempts to decompile source script\nWARNING: Not super reliable, nil == could not find"
+newButton("反编译", function()
+	return "反编译脚本源码\n警告: 不太可靠, nil == 未找到"
 end, function()
 	if selected then
 		if selected.Source then
@@ -2396,10 +2397,10 @@ end, function()
 	end
 end)
 
-newButton("Disable Info", function()
+newButton("关闭信息", function()
 	return string.format(
-		"[%s] Toggle function info (because it can cause lag in some games)",
-		funcEnabled and "ENABLED" or "DISABLED"
+		"[%s] 开关function信息\n(因为在某些游戏中它能造成卡顿)",
+		funcEnabled and "已开启" or "已关闭"
 	)
 end, function()
 	funcEnabled = not funcEnabled
@@ -2409,15 +2410,15 @@ end, function()
 	)
 end)
 
-newButton("Autoblock", function()
+newButton("自动拦截", function()
 	return string.format(
-		"[%s] [BETA] Intelligently detects and excludes spammy remote calls from logs",
-		autoblock and "ENABLED" or "DISABLED"
+		"[%s] 智能检测并从记录中拦截刷屏的remote",
+		autoblock and "已开启" or "已关闭"
 	)
 end, function()
 	autoblock = not autoblock
 	TextLabel.Text = string.format(
-		"[%s] [BETA] Intelligently detects and excludes spammy remote calls from logs",
+		"[%s] Intelligently detects and excludes spammy remote calls from logs",
 		autoblock and "ENABLED" or "DISABLED"
 	)
 	history = {}
@@ -2426,8 +2427,8 @@ end)
 
 newButton("CallingScript", function()
 	return string.format(
-		"[%s] [UNSAFE] Uses 'getcallingscript' to get calling script for Decompile and GetScript. Much more reliable, but opens up SimpleSpy to detection and/or instability.",
-		useGetCallingScript and "ENABLED" or "DISABLED"
+		"[%s] [不安全] 使用 'getcallingscript' 以获取调用中的脚本进行反编译和获取脚本.",
+		useGetCallingScript and "已开启" or "已关闭"
 	)
 end, function()
 	useGetCallingScript = not useGetCallingScript
@@ -2440,7 +2441,7 @@ end)
 newButton("KeyToString", function()
 	return string.format(
 		"[%s] [BETA] Uses an experimental new function to replicate Roblox's behavior when a non-primitive type is used as a key in a table. Still in development and may not properly reflect tostringed (empty) userdata.",
-		keyToString and "ENABLED" or "DISABLED"
+		keyToString and "已开启" or "已关闭"
 	)
 end, function()
 	keyToString = not keyToString
@@ -2450,10 +2451,10 @@ end, function()
 	)
 end)
 
-newButton("ToggleReturnValues", function()
+newButton("ReturnValues", function()
 	return string.format(
 		"[%s] [EXPERIMENTAL] Enables recording of return values for 'GetReturnValue'\n\nUse this method at your own risk, as it could be detectable.",
-		recordReturnValues and "ENABLED" or "DISABLED"
+		recordReturnValues and "已开启" or "已关闭"
 	)
 end, function()
 	recordReturnValues = not recordReturnValues
