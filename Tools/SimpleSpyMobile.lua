@@ -2345,7 +2345,7 @@ end)
 
 --- clears blacklist
 newButton("清除排除列表", function()
-	return "点击以清除排除名单"
+	return "点击以清除排除列表"
 end, function()
 	blacklist = {}
 	TextLabel.Text = "Blacklist cleared!"
