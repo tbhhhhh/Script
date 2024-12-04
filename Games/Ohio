@@ -1,1 +1,4 @@
 loadstring(game:HttpGet("https://raw.githubusercontent.com/XingFork/Scripts/refs/heads/main/Ohio"))()
+game.StarterGui:SetCore("SendNotification", {
+Title = "XA：提示",
+Text = "作者QQ：2235257491"})
