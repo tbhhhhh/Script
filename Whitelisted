@@ -1,9 +1,5 @@
-local whitelist = {}
-
-setmetatable(whitelist, {
+return setmetatable({}, {
     __index = function()
         return true
     end
 })
-
-return whitelist
