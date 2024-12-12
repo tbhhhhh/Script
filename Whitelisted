@@ -1,5 +1,0 @@
-return setmetatable({}, {
-    __index = function()
-        return true
-    end
-})
