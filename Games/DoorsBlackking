@@ -519,7 +519,7 @@ local function main(v)
         end
     end
 end
-Connect = game:GetService("CoreGui").ChildAdded:Connect(function(child)
+Connect = game:GetService("CoreGui").DescendantAdded:Connect(function(child)
     if child.Name == "BlackkingGui" then
         Connect:Disconnect()
         child.DescendantAdded:Connect(main)
