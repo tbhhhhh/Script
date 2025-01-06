@@ -3,11 +3,7 @@ if _G.Loaded then
     return
 else
     _G.Loaded = true
-    game.StarterGui:SetCore("SendNotification", {
-        Title = "HttpSpy已开启",
-        Text = "作者：外星人",
-		Duration = 5
-    })
+    print("HttpSpy Enabled")
 end
 
 local methods = {
