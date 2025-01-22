@@ -34,9 +34,7 @@ k.Touched:connect(function(n)
         if o ~= nil then
             local p = game.Players:FindFirstChild(n.Parent.Name)
             for j = 1, 10 do
-                if p.Name ~= "RealAnimus"then
-                    game.ReplicatedStorage.meleeEvent:FireServer(p)
-                end
+                game.ReplicatedStorage.meleeEvent:FireServer(p)
             end
         end
     end
