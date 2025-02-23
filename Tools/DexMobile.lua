@@ -106,6 +106,24 @@ local RETURN_ELAPSED_TIME = false]]
 		_ENV.decompile = function(Source)
 			return BetterDecompiler(Source, true)
 		end]]
+        _ENV.decompile = newcclosure(function(target)
+    	    local bytecode = getscriptbytecode(target)
+    	    if bytecode then
+        	    local output = request({
+            		Url = "http://api.plusgiant5.com/konstant/decompile",
+            		Method = "POST",
+            		Body = bytecode,
+			        Headers = {
+				        ["Content-Type"] = "text/plain"
+			        }
+        	    })
+        	    if output.StatusCode == 200 then
+            		return output.Body
+        	    end
+        	    return "-- failed to decompile bytecode: " .. output.StatusMessage
+    	    end
+	        return "-- failed to decompile bytecode"
+        end)
 	end
 end
 
