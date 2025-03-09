@@ -21,7 +21,7 @@ if _G.SimpleSpyExecuted and type(_G.SimpleSpyShutdown) == "function" then
 end
 
 local Players = game:GetService("Players")
-local CoreGui = game:GetService("CoreGui")
+local CoreGui = cloneref(game:GetService("CoreGui"))
 local Highlight =
 	loadstring(
 		game:HttpGet("https://github.com/exxtremestuffs/SimpleSpySource/raw/master/highlight.lua")
