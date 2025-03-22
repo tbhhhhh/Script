@@ -8,5 +8,5 @@ loadstring(game:HttpGet("https://pastebin.com/raw/h8nC0fLb", true))()
     Delta,
     Vega X
 ..etc
-## 联系
+## Contact
 QQ：2235257491；Discord: xingtaiduan
