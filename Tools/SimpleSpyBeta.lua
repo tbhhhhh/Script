@@ -13,6 +13,7 @@ local realconfigs = {
     funcEnabled = true,
     advancedinfo = false,
     --logreturnvalues = false,
+    logfireclient = false,
     supersecretdevtoggle = false
 }
 
@@ -1011,7 +1012,7 @@ function newRemote(type, data)
     local connect = Button.MouseButton1Click:Connect(function()
         logthread(running())
         eventSelect(RemoteTemplate)
-        log.GenScript = genScript(log.Remote, log.args)
+        log.GenScript = genScript(log.Remote, log.args, data.method)
         if blocked then
             log.GenScript = "-- THIS REMOTE WAS PREVENTED FROM FIRING TO THE SERVER BY SIMPLESPY\n\n" .. log.GenScript
         end
@@ -1026,7 +1027,7 @@ function newRemote(type, data)
 end
 
 --- Generates a script from the provided arguments (first has to be remote path)
-function genScript(remote, args)
+function genScript(remote, args, method)
     prevTables = {}
     local gen = ""
     if #args > 0 then
@@ -1063,16 +1064,16 @@ function genScript(remote, args)
         if not remote:IsDescendantOf(game) and not getnilrequired then
             gen = "function getNil(name,class) for _,v in next, getnilinstances()do if v.ClassName==class and v.Name==name then return v;end end end\n\n" .. gen
         end
-        if remote:IsA("RemoteEvent") or remote:IsA("UnreliableRemoteEvent") then
-            gen ..= LazyFix.SerializeKnown("Instance", remote) .. ":FireServer(unpack(args))"
-        elseif remote:IsA("RemoteFunction") then
-            gen = gen .. LazyFix.SerializeKnown("Instance", remote) .. ":InvokeServer(unpack(args))"
+        if method == "OnClientEvent" then
+            gen ..= "firesignal("..LazyFix.SerializeKnown("Instance", remote)..".OnClientEvent, unpack(args))"
+        else
+            gen ..= LazyFix.SerializeKnown("Instance", remote) .. ":"..method.."(unpack(args))"
         end
     else
-        if remote:IsA("RemoteEvent") or remote:IsA("UnreliableRemoteEvent") then
-            gen ..= LazyFix.SerializeKnown("Instance", remote) .. ":FireServer()"
-        elseif remote:IsA("RemoteFunction") then
-            gen ..= LazyFix.SerializeKnown("Instance", remote) .. ":InvokeServer()"
+        if method == "OnClientEvent" then
+            gen ..= "firesignal("..LazyFix.SerializeKnown("Instance", remote) .. ".OnClientEvent)"
+        else
+            gen ..= LazyFix.SerializeKnown("Instance", remote) .. ":"..method.."()"
         end
     end
     prevTables = {}
@@ -1707,7 +1708,7 @@ function remoteHandler(data)
         history[id].lastCall = tick()
     end
 
-    if (data.remote:IsA("RemoteEvent") or data.remote:IsA("UnreliableRemoteEvent")) and lower(data.method) == "fireserver" then
+    if (data.remote:IsA("RemoteEvent") or data.remote:IsA("UnreliableRemoteEvent")) and (lower(data.method) == "fireserver" or data.method == "OnClientEvent") then
         newRemote("event", data)
     elseif data.remote:IsA("RemoteFunction") and lower(data.method) == "invokeserver" then
         newRemote("function", data)
@@ -1719,7 +1720,9 @@ local newindex = function(method,originalfunction,...)
         local remote = cloneref(...)
 
         if remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction") or remote:IsA("UnreliableRemoteEvent") then
-            if not configs.logcheckcaller and checkcaller() then return originalfunction(...) end
+
+            if not configs.logcheckcaller and checkcaller() and method ~= "OnClientEvent" then return originalfunction(...) end
+
             local id = ThreadGetDebugId(remote)
             local blockcheck = tablecheck(blocklist,remote,id)
             local args = {select(2,...)}
@@ -1894,12 +1897,33 @@ function toggleSpyMethod()
     toggle = not toggle
 end
 
+-- Log OnClientEvent, OnClientInvoke(ComingSoon)
+local function receiveRemote(v)
+    if typeof(v) == "Instance" and (IsA(v, "RemoteEvent") or IsA(v, "UnreliableRemoteEvent")) then
+        connectedRemotes[#connectedRemotes+1] = v.OnClientEvent:Connect(function(...)
+            if configs.logfireclient and toggle then
+                newindex("OnClientEvent", blankfunction, v, ...)
+            end
+        end)
+    end
+end
+for _, v in next, game:GetDescendants() do
+    receiveRemote(v)
+end
+for _, v in next, getnilinstances() do
+    receiveRemote(v)
+end
+connections["DescendantAdded"] = game.DescendantAdded:Connect(receiveRemote)
+
 --- Shuts down the remote spy
 local function shutdown()
     if schedulerconnect then
         schedulerconnect:Disconnect()
     end
     for _, connection in next, connections do
+        connection:Disconnect()
+    end
+    for _, connection in next, connectedRemotes do
         connection:Disconnect()
     end
     for i,v in next, running_threads do
@@ -2315,6 +2339,14 @@ end,
 function()
     configs.advancedinfo = not configs.advancedinfo
     TextLabel.Text = ("[%s] Display more remoteinfo"):format(configs.advancedinfo and "ENABLED" or "DISABLED")
+end)
+
+newButton("Log FireClient",function()
+    return ("[%s] Log Server FireClient(OnClientEvent)"):format(configs.logfireclient and "ENABLED" or "DISABLED")
+end,
+function()
+    configs.logfireclient = not configs.logfireclient
+    TextLabel.Text = ("[%s] Log Server FireClient(OnClientEvent)"):format(configs.logfireclient and "ENABLED" or "DISABLED")
 end)
 
 newButton("Join Discord",function()
