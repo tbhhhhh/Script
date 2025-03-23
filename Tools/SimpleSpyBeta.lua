@@ -227,7 +227,7 @@ local LazyFix = loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/S
 
 local SimpleSpy3 = Create("ScreenGui",{ResetOnSpawn = false})
 local Storage = Create("Folder",{})
-local Background = Create("Frame",{Parent = SimpleSpy3,BackgroundColor3 = Color3.new(1, 1, 1),BackgroundTransparency = 1,Position = UDim2.new(0, 170, 0, 100),Size = UDim2.new(0, 450, 0, 268), Active = true, Draggable = true})
+local Background = Create("Frame",{Parent = SimpleSpy3,BackgroundColor3 = Color3.new(1, 1, 1),BackgroundTransparency = 1,Position = UDim2.new(0, 170, 0, 100),Size = UDim2.new(0, 450, 0, 268),Active = true,Draggable = true})
 local LeftPanel = Create("Frame",{Parent = Background,BackgroundColor3 = Color3.fromRGB(53, 52, 55),BorderSizePixel = 0,Position = UDim2.new(0, 0, 0, 19),Size = UDim2.new(0, 131, 0, 249)})
 local LogList = Create("ScrollingFrame",{Parent = LeftPanel,Active = true,BackgroundColor3 = Color3.new(1, 1, 1),BackgroundTransparency = 1,BorderSizePixel = 0,Position = UDim2.new(0, 0, 0, 9),Size = UDim2.new(0, 131, 0, 232),CanvasSize = UDim2.new(0, 0, 0, 0),ScrollBarThickness = 4})
 local UIListLayout = Create("UIListLayout",{Parent = LogList,HorizontalAlignment = Enum.HorizontalAlignment.Center,SortOrder = Enum.SortOrder.LayoutOrder})
@@ -249,8 +249,7 @@ local TextLabel = Create("TextLabel",{Parent = ToolTip,BackgroundColor3 = Color3
 
 --Toggle
 local Gui = Instance.new("ScreenGui", Background)
-local ToggleButton = Create("ImageButton", {Parent = Gui, Position = UDim2.new(0,100,0,60), Size = UDim2.new(0,40,0,40), BackgroundColor3 = Color3.fromRGB(53, 52, 55), Image = "rbxassetid://7072720870", Active = true, Draggable = true
-})
+local ToggleButton = Create("ImageButton", {Parent = Gui, Position = UDim2.new(0,100,0,60), Size = UDim2.new(0,40,0,40), BackgroundColor3 = Color3.fromRGB(53, 52, 55), Image = "rbxassetid://7072720870", Active = true, Draggable = true})
 ToggleButton.MouseButton1Down:Connect(function()
     ToggleButton.Image = (Background.Visible and "rbxassetid://7072720870") or "rbxassetid://7072719338"
     Background.Visible = not Background.Visible
@@ -808,7 +807,7 @@ end
 function backgroundUserInput(input)
     local mousePos = UserInputService:GetMouseLocation() - GuiInset
     local inResizeRange, type = isInResizeRange(mousePos)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 and inResizeRange then
+    if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and inResizeRange then
         local lastPos = UserInputService:GetMouseLocation()
         local offset = Background.AbsoluteSize - lastPos
         local currentPos = lastPos + offset
