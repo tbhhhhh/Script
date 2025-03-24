@@ -997,7 +997,7 @@ function newRemote(type, data)
         Name = remote.name,
         Function = data.infofunc or "--Function Info is disabled",
         Remote = remote,
-        method = data.method
+        method = data.method,
         DebugId = data.id,
         metamethod = data.metamethod,
         args = data.args,
