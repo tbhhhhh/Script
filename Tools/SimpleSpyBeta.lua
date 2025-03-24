@@ -997,6 +997,7 @@ function newRemote(type, data)
         Name = remote.name,
         Function = data.infofunc or "--Function Info is disabled",
         Remote = remote,
+        method = data.method
         DebugId = data.id,
         metamethod = data.metamethod,
         args = data.args,
@@ -1012,7 +1013,7 @@ function newRemote(type, data)
     local connect = Button.MouseButton1Click:Connect(function()
         logthread(running())
         eventSelect(RemoteTemplate)
-        log.GenScript = genScript(log.Remote, log.args, data.method)
+        log.GenScript = genScript(log.Remote, log.args, log.method)
         if blocked then
             log.GenScript = "-- THIS REMOTE WAS PREVENTED FROM FIRING TO THE SERVER BY SIMPLESPY\n\n" .. log.GenScript
         end
@@ -2072,12 +2073,11 @@ newButton("Run Code",
             TextLabel.Text = "Executing..."
             xpcall(function()
                 local returnvalue
-                if Remote:IsA("RemoteEvent") or Remote:IsA("UnreliableRemoteEvent") then
-                    returnvalue = Remote:FireServer(unpack(selected.args))
-                elseif Remote:IsA("RemoteFunction") then
-                    returnvalue = Remote:InvokeServer(unpack(selected.args))
+                if selected.method == "OnClientEvent" then
+                    returnvalue = firesignal(Remote.OnClientEvent, unpack(selected.args))
+                else
+                    returnvalue = Remote[selected.method](Remote, unpack(selected.args))
                 end
-
                 TextLabel.Text = ("Executed successfully!\n%s"):format(v2s(returnvalue))
             end,function(err)
                 TextLabel.Text = ("Execution error!\n%s"):format(err)
