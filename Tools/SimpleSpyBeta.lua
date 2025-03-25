@@ -1767,6 +1767,8 @@ local newindex = function(method,originalfunction,...)
                     schedule(remoteHandler,data)
                     if not blockcheck then
                         return returndata
+                    else
+                        return
                     end
                 end
 
@@ -1816,6 +1818,8 @@ local newnamecall = newcclosure(function(...)
                         schedule(remoteHandler,data)
                         if not blockcheck then
                             return returndata
+                        else
+                            return
                         end
                     end
 
