@@ -12,7 +12,7 @@ local realconfigs = {
     autoblock = false,
     funcEnabled = true,
     advancedinfo = false,
-    --logreturnvalues = false,
+    logreturnvalues = false,
     logfireclient = false,
     supersecretdevtoggle = false
 }
@@ -959,17 +959,31 @@ function newButton(name, description, onClick)
     local ColorBar = Create("Frame",{Name = "ColorBar",Parent = FunctionTemplate,BackgroundColor3 = Color3.new(1, 1, 1),BorderSizePixel = 0,Position = UDim2.new(0, 7, 0, 10),Size = UDim2.new(0, 7, 0, 18),ZIndex = 3})
     local Text = Create("TextLabel",{Text = name,Name = "Text",Parent = FunctionTemplate,BackgroundColor3 = Color3.new(1, 1, 1),BackgroundTransparency = 1,Position = UDim2.new(0, 19, 0, 10),Size = UDim2.new(0, 69, 0, 18),ZIndex = 2,Font = Enum.Font.SourceSans,TextColor3 = Color3.new(1, 1, 1),TextSize = 14,TextStrokeColor3 = Color3.new(0.145098, 0.141176, 0.14902),TextXAlignment = Enum.TextXAlignment.Left})
     local Button = Create("TextButton",{Name = "Button",Parent = FunctionTemplate,BackgroundColor3 = Color3.new(0, 0, 0),BackgroundTransparency = 0.69999998807907,BorderColor3 = Color3.new(1, 1, 1),Position = UDim2.new(0, 7, 0, 10),Size = UDim2.new(0, 80, 0, 18),AutoButtonColor = false,Font = Enum.Font.SourceSans,Text = "",TextColor3 = Color3.new(0, 0, 0),TextSize = 14})
-
+    if description():match("ENABLED") then
+        ColorBar.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+    elseif description():match("DISABLED") then
+        ColorBar.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    end
     Button.MouseEnter:Connect(function()
         makeToolTip(true, description())
     end)
     Button.MouseLeave:Connect(function()
+        task.wait(0.75)
         makeToolTip(false)
     end)
     FunctionTemplate.AncestryChanged:Connect(function()
         makeToolTip(false)
     end)
     Button.MouseButton1Click:Connect(function(...)
+        if description():match("ENABLED") or description():match("DISABLED") then
+            TextLabel:GetPropertyChangedSignal("Text"):Once(function()
+                if TextLabel.Text:match("ENABLED") then
+                    ColorBar.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+                elseif TextLabel.Text:match("DISABLED") then
+                    ColorBar.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+                end
+            end)
+        end
         logthread(running())
         onClick(FunctionTemplate, ...)
     end)
@@ -1747,28 +1761,17 @@ local newindex = function(method,originalfunction,...)
                     local calling = getcallingscript()
                     data.callingscript = calling and cloneref(calling) or nil
                 end
-
-                schedule(remoteHandler,data)
-
-                --[[if configs.logreturnvalues and remote:IsA("RemoteFunction") then
-                    local thread = running()
-                    local returnargs = {...}
-                    local returndata
-
-                    spawn(function()
-                        setnamecallmethod(method)
-                        returndata = originalNamecall(unpack(returnargs))
-                        data.returnvalue.data = returndata
-                        if ThreadIsNotDead(thread) then
-                            resume(thread)
-                        end
-                     end)
-                    yield()
+                if configs.logreturnvalues and remote:IsA("RemoteFunction") then
+                    local returndata = originalfunction(...)
+                    data.returnvalue.data = returndata
+                    schedule(remoteHandler,data)
                     if not blockcheck then
                         return returndata
                     end
-                end]]
                 end
+
+                schedule(remoteHandler,data)
+            end
             if blockcheck then return end
         end
     end
@@ -1807,27 +1810,16 @@ local newnamecall = newcclosure(function(...)
                         local calling = getcallingscript()
                         data.callingscript = calling and cloneref(calling) or nil
                     end
-
-                    schedule(remoteHandler,data)
-                    
-                    --[[if configs.logreturnvalues and remote.IsA(remote,"RemoteFunction") then
-                        local thread = running()
-                        local returnargs = {...}
-                        local returndata
-
-                        spawn(function()
-                            setnamecallmethod(method)
-                            returndata = originalNamecall(unpack(returnargs))
-                            data.returnvalue.data = returndata
-                            if ThreadIsNotDead(thread) then
-                                resume(thread)
-                            end
-                        end)
-                        yield()
+                    if configs.logreturnvalues and IsA(remote,"RemoteFunction") then
+                        local returndata = originalNamecall(...)
+                        data.returnvalue.data = returndata
+                        schedule(remoteHandler,data)
                         if not blockcheck then
                             return returndata
                         end
-                    end]]
+                    end
+
+                    schedule(remoteHandler,data)
                 end
                 if blockcheck then return end
             end
@@ -2279,23 +2271,24 @@ newButton("Decompile",
     end
 )
 
-    --[[newButton(
-        "returnvalue",
-        function() return "Get a Remote's return data" end,
-        function()
-            if selected then
-                local Remote = selected.Remote
-                if Remote and Remote:IsA("RemoteFunction") then
-                    if selected.returnvalue and selected.returnvalue.data then
-                        return codebox:setRaw(v2s(selected.returnvalue.data))
-                    end
-                    return codebox:setRaw("No data was returned")
+newButton(
+    "returnvalue",
+    function() return "Get a Remote's return data" end,
+    function()
+        if selected then
+            local Remote = selected.Remote
+            if Remote and Remote:IsA("RemoteFunction") then
+                if selected.returnvalue and selected.returnvalue.data ~= nil then
+                    codebox:setRaw("return "..LazyFix.Serialize(selected.returnvalue.data, true))
                 else
-                    codebox:setRaw("RemoteFunction expected got "..(Remote and Remote.ClassName))
+                    codebox:setRaw("No data was returned")
                 end
+            else
+                codebox:setRaw("RemoteFunction expected got "..(Remote and Remote.ClassName))
             end
         end
-    )]]
+    end
+)
 
 newButton(
     "Disable Info",
@@ -2325,13 +2318,13 @@ function()
     TextLabel.Text = ("[%s] Log remotes fired by the client"):format(configs.logcheckcaller and "ENABLED" or "DISABLED")
 end)
 
---[[newButton("Log returnvalues",function()
-    return ("[BETA] [%s] Log RemoteFunction's return values"):format(configs.logcheckcaller and "ENABLED" or "DISABLED")
+newButton("Log returnvalues",function()
+    return ("[BETA] [%s] Log RemoteFunction's return values"):format(configs.logreturnvalues and "ENABLED" or "DISABLED")
 end,
 function()
     configs.logreturnvalues = not configs.logreturnvalues
     TextLabel.Text = ("[BETA] [%s] Log RemoteFunction's return values"):format(configs.logreturnvalues and "ENABLED" or "DISABLED")
-end)]]
+end)
 
 newButton("Advanced Info",function()
     return ("[%s] Display more remoteinfo"):format(configs.advancedinfo and "ENABLED" or "DISABLED")
