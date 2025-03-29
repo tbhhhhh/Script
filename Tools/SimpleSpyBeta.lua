@@ -14,6 +14,7 @@ local realconfigs = {
     advancedinfo = false,
     logreturnvalues = false,
     logfireclient = false,
+    loginvokeclient = false,
     supersecretdevtoggle = false
 }
 
@@ -63,6 +64,7 @@ local getconstants = getconstants or debug.getconstants or blankfunction
 
 local getcustomasset = getsynasset or getcustomasset
 local getcallingscript = getcallingscript or blankfunction
+local getcallbackvalue = getcallbackvalue or getcallbackmember
 local newcclosure = newcclosure or blankfunction
 local clonefunction = clonefunction or blankfunction
 local cloneref = cloneref or blankfunction
@@ -285,6 +287,7 @@ local blocklist = {}
 local getNil = false
 --- Array of remotes (and original functions) connected to
 local connectedRemotes = {}
+local hooks = {}
 --- True = hookfunction, false = namecall
 local toggle = false
 --- used to prevent recursives
@@ -1081,12 +1084,16 @@ function genScript(remote, args, method)
         end
         if method == "OnClientEvent" then
             gen ..= "firesignal("..LazyFix.SerializeKnown("Instance", remote)..".OnClientEvent, unpack(args))"
+        elseif method == "OnClientInvoke" then
+            gen ..= "getcallbackvalue("..LazyFix.SerializeKnown("Instance", remote)..", \"OnClientInvoke\")(unpack(args))"
         else
             gen ..= LazyFix.SerializeKnown("Instance", remote) .. ":"..method.."(unpack(args))"
         end
     else
         if method == "OnClientEvent" then
             gen ..= "firesignal("..LazyFix.SerializeKnown("Instance", remote) .. ".OnClientEvent)"
+        elseif method == "OnClientInvoke" then
+            gen ..= "getcallbackvalue("..LazyFix.SerializeKnown("Instance", remote)..", \"OnClientInvoke\")()"
         else
             gen ..= LazyFix.SerializeKnown("Instance", remote) .. ":"..method.."()"
         end
@@ -1725,7 +1732,7 @@ function remoteHandler(data)
 
     if (data.remote:IsA("RemoteEvent") or data.remote:IsA("UnreliableRemoteEvent")) and (lower(data.method) == "fireserver" or data.method == "OnClientEvent") then
         newRemote("event", data)
-    elseif data.remote:IsA("RemoteFunction") and lower(data.method) == "invokeserver" then
+    elseif data.remote:IsA("RemoteFunction") and (lower(data.method) == "invokeserver" or data.method == "OnClientInvoke") then
         newRemote("function", data)
     end
 end
@@ -1736,7 +1743,7 @@ local newindex = function(method,originalfunction,...)
 
         if remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction") or remote:IsA("UnreliableRemoteEvent") then
 
-            if not configs.logcheckcaller and checkcaller() and method ~= "OnClientEvent" then return originalfunction(...) end
+            if not configs.logcheckcaller and checkcaller() and method ~= "OnClientEvent" and method ~= "OnClientInvoke" then return originalfunction(...) end
 
             local id = ThreadGetDebugId(remote)
             local blockcheck = tablecheck(blocklist,remote,id)
@@ -1894,14 +1901,27 @@ function toggleSpyMethod()
     toggle = not toggle
 end
 
--- Log OnClientEvent, OnClientInvoke(ComingSoon)
+-- Log OnClientEvent, OnClientInvoke
 local function receiveRemote(v)
-    if typeof(v) == "Instance" and (IsA(v, "RemoteEvent") or IsA(v, "UnreliableRemoteEvent")) then
+    if IsA(v, "RemoteEvent") or IsA(v, "UnreliableRemoteEvent") then
         connectedRemotes[#connectedRemotes+1] = v.OnClientEvent:Connect(function(...)
             if configs.logfireclient and toggle then
                 newindex("OnClientEvent", blankfunction, v, ...)
             end
         end)
+    elseif IsA(v, "RemoteFunction") then
+        local callback = getcallbackvalue and getcallbackvalue(v, "OnClientInvoke")
+        if callback then
+            v.OnClientInvoke = function(...)
+                if configs.loginvokeclient and toggle then
+                    return newindex("OnClientInvoke", callback, v, ...)
+                end
+                return callback(...)
+            end
+            hooks[#hooks+1] = function()
+                v.OnClientInvoke = callback
+            end
+        end
     end
 end
 for _, v in next, game:GetDescendants() do
@@ -1922,6 +1942,9 @@ local function shutdown()
     end
     for _, connection in next, connectedRemotes do
         connection:Disconnect()
+    end
+    for _, v in next, hooks do
+        task.spawn(v)
     end
     for i,v in next, running_threads do
         if ThreadIsNotDead(v) then
@@ -2138,7 +2161,7 @@ function()
                 }
 
                 if Remote:IsA("RemoteFunction") then
-                    info["advancedinfo"]["OnClientInvoke"] = getcallbackmember and (getcallbackmember(Remote,"OnClientInvoke") or "N/A") or "N/A --Missing function getcallbackmember"
+                    info["advancedinfo"]["OnClientInvoke"] = getcallbackvalue and (getcallbackvalue(Remote,"OnClientInvoke") or "N/A") or "N/A --Missing function getcallbackvalue"
                 elseif getconnections then
                     info["advancedinfo"]["OnClientEvents"] = {}
 
@@ -2339,11 +2362,19 @@ function()
 end)
 
 newButton("Log FireClient",function()
-    return ("[%s] Log Server FireClient(OnClientEvent)"):format(configs.logfireclient and "ENABLED" or "DISABLED")
+    return ("[%s] Log Server FireClient"):format(configs.logfireclient and "ENABLED" or "DISABLED")
 end,
 function()
     configs.logfireclient = not configs.logfireclient
-    TextLabel.Text = ("[%s] Log Server FireClient(OnClientEvent)"):format(configs.logfireclient and "ENABLED" or "DISABLED")
+    TextLabel.Text = ("[%s] Log Server FireClient"):format(configs.logfireclient and "ENABLED" or "DISABLED")
+end)
+
+newButton("Log InvokeClient",function()
+    return ("[%s] Log Server InvokeClient"):format(configs.loginvokeclient and "ENABLED" or "DISABLED")
+end,
+function()
+    configs.loginvokeclient = not configs.loginvokeclient
+    TextLabel.Text = ("[%s] Log Server InvokeClient"):format(configs.loginvokeclient and "ENABLED" or "DISABLED")
 end)
 
 newButton("Join Discord",function()
