@@ -228,7 +228,7 @@ end
 local Highlight = (isfile and loadfile and isfile("Highlight.lua") and loadfile("Highlight.lua")()) or loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/SimpleSpy/main/Highlight.lua"))()
 local LazyFix = loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/SimpleSpy/refs/heads/main/Dependencies/Libraries/Serializer.luau"))() -- Very lazy fix as I'm legit just pasting it from the rewrite
 
-local SimpleSpy3 = Create("ScreenGui",{ResetOnSpawn = false})
+local SimpleSpy3 = Create("ScreenGui",{Name = "SimpleSpy",ResetOnSpawn = false})
 local Storage = Create("Folder",{})
 local Background = Create("Frame",{Parent = SimpleSpy3,BackgroundColor3 = Color3.new(1, 1, 1),BackgroundTransparency = 1,Position = UDim2.new(0, 170, 0, 100),Size = UDim2.new(0, 450, 0, 268),Active = true,Draggable = true})
 local LeftPanel = Create("Frame",{Parent = Background,BackgroundColor3 = Color3.fromRGB(53, 52, 55),BorderSizePixel = 0,Position = UDim2.new(0, 0, 0, 19),Size = UDim2.new(0, 131, 0, 249)})
@@ -251,8 +251,7 @@ local ToolTip = Create("Frame",{Parent = SimpleSpy3,BackgroundColor3 = Color3.fr
 local TextLabel = Create("TextLabel",{Parent = ToolTip,BackgroundColor3 = Color3.new(1, 1, 1),BackgroundTransparency = 1,Position = UDim2.new(0, 2, 0, 2),Size = UDim2.new(0, 196, 0, 46),ZIndex = 3,Font = Enum.Font.SourceSans,Text = "This is some slightly longer text.",TextColor3 = Color3.new(1, 1, 1),TextSize = 14,TextWrapped = true,TextXAlignment = Enum.TextXAlignment.Left,TextYAlignment = Enum.TextYAlignment.Top})
 
 --Toggle
-local Gui = Instance.new("ScreenGui", Background)
-local ToggleButton = Create("ImageButton", {Parent = Gui, Position = UDim2.new(0,100,0,60), Size = UDim2.new(0,40,0,40), BackgroundColor3 = Color3.fromRGB(53, 52, 55), Image = "rbxassetid://7072720870", Active = true, Draggable = true})
+local ToggleButton = Create("ImageButton", {Parent = SimpleSpy3, Position = UDim2.new(0,100,0,60), Size = UDim2.new(0,40,0,40), BackgroundColor3 = Color3.fromRGB(53, 52, 55), Image = "rbxassetid://7072720870", Active = true, Draggable = true})
 ToggleButton.MouseButton1Down:Connect(function()
     ToggleButton.Image = (Background.Visible and "rbxassetid://7072720870") or "rbxassetid://7072719338"
     Background.Visible = not Background.Visible
