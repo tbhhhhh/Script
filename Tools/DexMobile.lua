@@ -35,96 +35,27 @@ Explorer = function()
 -- Common Locals
 
 local Decompile do
-	local Success, Decompile_Source = pcall(function()
-		return game:HttpGet("https://raw.githubusercontent.com/w-a-e/Advanced-Decompiler-V3/main/init.lua", true)
-	end)
-	
-	if Success then
-		local CONSTANTS = [[
-local ENABLED_REMARKS = {
-	NATIVE_REMARK = true,
-	INLINE_REMARK = true
-}
-
-local DECOMPILER_TIMEOUT = 10
-
-local READER_FLOAT_PRECISION = 7 -- up to 99
-local SHOW_INSTRUCTION_LINES = false
-local SHOW_REFERENCES = true
-local SHOW_OPERATION_NAMES = false
-local SHOW_MISC_OPERATIONS = false
-local LIST_USED_GLOBALS = true
-local RETURN_ELAPSED_TIME = false]]
+	local _ENV = (getgenv or getrenv or getfenv)()
+	Decompile = _ENV.decompile
 		
-		xpcall(function()
-			return loadstring(
-				string.gsub(
-					string.gsub(
-						Decompile_Source, "return %(x %% 2^32%) // %(2^disp%)", "return math.floor((x %% 2^32) / (2^disp))", 1
-					), ";;CONSTANTS HERE;;", CONSTANTS
-				), "Advanced-Decompiler-V3"
-			)()
-		end, warn)
-		
-		-- local HttpService = service.HttpService
-		
-		local _ENV = (getgenv or getrenv or getfenv)()
-		Decompile = _ENV.decompile
-		
-		--[[local request = request or http_request or (syn and syn.request)
-		
-		local cleanScript = function(ucScript, cUrl)
-			local Url = (cUrl or "http://localhost:5000/fix_script")
-			
-			local result = request({
-				Url = Url,
-				Method = "POST",
-				Headers = { ["Content-Type"] = "application/json" },
-				Body = HttpService:JSONEncode({ script = ucScript })
-			})
-			
-			return (result.Success and result.fixed_script) or nil
-		end
-		
-		local BetterDecompiler = function(Source, Enabled, cUrl)
-			local Success, result = pcall(function()
-				return Decompile(Source)
-			end)
-			
-			if Success and result then
-				if Enabled then
-					local _Success, _result = pcall(cleanScript, Source, cUrl)
-					
-					if _Success and _result then
-						return _result
-					end
-				end
-				return result
-			end
-		end
-		
-		_ENV.decompile = function(Source)
-			return BetterDecompiler(Source, true)
-		end]]
-        _ENV.decompile = newcclosure(function(target)
-    	    local bytecode = getscriptbytecode(target)
-    	    if bytecode then
-        	    local output = request({
-            		Url = "http://api.plusgiant5.com/konstant/decompile",
-            		Method = "POST",
-            		Body = bytecode,
-			        Headers = {
-				        ["Content-Type"] = "text/plain"
-			        }
-        	    })
-        	    if output.StatusCode == 200 then
-            		return output.Body
-        	    end
-        	    return "-- failed to decompile bytecode: " .. output.StatusMessage
-    	    end
-	        return "-- failed to decompile bytecode"
-        end)
-	end
+    _ENV.decompile = newcclosure(function(target)
+    	local bytecode = getscriptbytecode(target)
+    	if bytecode then
+        	local output = request({
+            	Url = "http://api.plusgiant5.com/konstant/decompile",
+            	Method = "POST",
+            	Body = bytecode,
+			    Headers = {
+				    ["Content-Type"] = "text/plain"
+			    }
+        	})
+        	if output.StatusCode == 200 then
+            	return output.Body
+        	end
+        	return "-- failed to decompile bytecode: " .. output.StatusMessage
+    	end
+	    return "-- failed to decompile bytecode"
+    end)
 end
 
 local Main,Lib,Apps,Settings -- Main Containers
@@ -11551,7 +11482,7 @@ Main = (function()
 		Lib.FastWait()
 		
 		-- Init other modules
-		intro.SetProgress("Initializing Modules",0.9)
+		intro.SetProgress("Initializing Modules",0.9)	
 		Explorer.Init()
 		Properties.Init()
 		ScriptViewer.Init()
@@ -11563,7 +11494,7 @@ Main = (function()
 			Lib.FastWait(1.25)
 			intro.Close()
 		end)()
-		
+
 		-- Init window system, create main menu, show explorer and properties
 		Lib.Window.Init()
 		Main.CreateMainGui()
