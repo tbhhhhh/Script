@@ -11482,7 +11482,7 @@ Main = (function()
 		Lib.FastWait()
 		
 		-- Init other modules
-		intro.SetProgress("Initializing Modules",0.9)	
+		intro.SetProgress("Initializing Modules",0.9)
 		Explorer.Init()
 		Properties.Init()
 		ScriptViewer.Init()
