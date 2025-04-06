@@ -1,51 +1,86 @@
+if getgenv().ESPLibrary then
+    return getgenv().ESPLibrary
+end
+
+local Players = cloneref(game:GetService("Players"))
 local CoreGui = cloneref(game:GetService("CoreGui"))
+local RunService = cloneref(game:GetService("RunService"))
 
 local Library = {
-    ESPFolder = Instance.new("Folder", CoreGui)
+    ESP = {},
+    ESPFolder = Instance.new("Folder", CoreGui),
+    ShowDistance = true
 }
 Library.ESPFolder.Name = "ESPFolder"
-Library.Highlight = function(child, name, color, size, tag)
+Library.Highlight = function(object, name, color, size, tag)
+    local ESP = {
+        Index = #Library.ESP+1,
+        Object = object,
+        Name = name,
+        Tag = tag
+    }
     local BillboardGui = Instance.new("BillboardGui", Library.ESPFolder)
     BillboardGui.Name = tag
     BillboardGui.Enabled = true
     BillboardGui.ResetOnSpawn = false
     BillboardGui.AlwaysOnTop = true
     BillboardGui.Size = UDim2.new(0, 200, 0, 50)
-    BillboardGui.Adornee = child
+    BillboardGui.Adornee = object
+    BillboardGui.StudsOffset = Vector3.new(0, 0, 0)
     
     local TextLabel = Instance.new("TextLabel", BillboardGui)
     TextLabel.Size = UDim2.new(0, 200, 0, 50)
-    TextLabel.Position = UDim2.new(0, 0, 0, -20)
     TextLabel.Font = Enum.Font.SourceSans
     TextLabel.TextWrapped = true
     TextLabel.RichText = true
     TextLabel.TextStrokeTransparency = 0
     TextLabel.BackgroundTransparency = 1
-    
     TextLabel.Text = name
     TextLabel.TextColor3 = color
     TextLabel.TextSize = size
     
     local UIStroke = Instance.new("UIStroke", TextLabel)
-    UIStroke.Thickness = 0.75
+    UIStroke.Thickness = 1
     
     local Highlight = Instance.new("Highlight", BillboardGui)
-    Highlight.Adornee = child
+    Highlight.Adornee = object
     Highlight.FillColor = color
     Highlight.OutlineColor = color
-    Highlight.FillTransparency = 0.7
+    Highlight.FillTransparency = 0.65
     Highlight.OutlineTransparency = 0
     
-    return BillboardGui
+    ESP.BillboardGui = BillboardGui
+    ESP.TextLabel = TextLabel
+    ESP.UIStroke = UIStroke
+    ESP.Highlight = Highlight
+    
+    function ESP:Destroy()
+        BillboardGui:Destroy()
+        Library.ESP[ESP.Index] = nil
+    end
+    
+    Library.ESP[ESP.Index] = ESP
+    return ESP
 end
 
 Library.Clear = function(tag)
-    for _, v in pairs(Library.ESPFolder:GetChildren()) do
-        if v.Name == tag then
+    for _, v in pairs(Library.ESP) do
+        if v.Tag == tag then
             v:Destroy()
         end
     end
 end
+
+RunService.RenderStepped:Connect(function()
+    for _, v in pairs(Library.ESP) do
+        if ESPLibrary.ShowDistance then
+            local Distance = Players.LocalPlayer:DistanceFromCharacter(v.Object:GetPivot().Position)
+            v.TextLabel.Text = ("%s\n[%s]"):format(v.Name, math.floor(Distance))
+        else
+            v.TextLabel.Text = v.Name
+        end
+    end
+end)
 
 getgenv().ESPLibrary = Library
 return Library
