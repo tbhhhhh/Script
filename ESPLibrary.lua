@@ -6,10 +6,14 @@ local Players = cloneref(game:GetService("Players"))
 local CoreGui = cloneref(game:GetService("CoreGui"))
 local RunService = cloneref(game:GetService("RunService"))
 
+local LP = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
 local Library = {
     ESP = {},
     ESPFolder = Instance.new("Folder", CoreGui),
-    ShowDistance = true
+    ShowDistance = true,
+    MaxDistance = math.huge
 }
 Library.ESPFolder.Name = "ESPFolder"
 Library.Highlight = function(object, name, color, size, tag)
@@ -59,6 +63,11 @@ Library.Highlight = function(object, name, color, size, tag)
         Library.ESP[ESP.Index] = nil
     end
     
+    function ESP:ToggleVisibility(Value)
+		BillboardGui.Enabled = Value
+		Highlight.Adornee = Value and object or nil
+	end
+    
     Library.ESP[ESP.Index] = ESP
     return ESP
 end
@@ -73,8 +82,19 @@ end
 
 RunService.RenderStepped:Connect(function()
     for _, v in pairs(Library.ESP) do
-        if ESPLibrary.ShowDistance then
-            local Distance = Players.LocalPlayer:DistanceFromCharacter(v.Object:GetPivot().Position)
+        local TargetPosition = v.Object:GetPivot().Position
+        local ScreenPosition, OnScreen = Camera:WorldToScreenPoint(TargetPosition)
+        
+        ESP:ToggleVisibility(OnScreen)
+        if not OnScreen then return end
+        
+        local Distance = LP:DistanceFromCharacter(TargetPosition)
+        if Distance > Library.MaxDistance then
+            ESP:ToggleVisibility(false)
+            return
+        end
+        
+        if Library.ShowDistance then
             v.TextLabel.Text = ("%s\n[%s]"):format(v.Name, math.floor(Distance))
         else
             v.TextLabel.Text = v.Name
