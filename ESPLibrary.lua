@@ -83,7 +83,7 @@ end
 RunService.RenderStepped:Connect(function()
     for _, v in pairs(Library.ESP) do
         local TargetPosition = v.Object:GetPivot().Position
-        local ScreenPosition, OnScreen = Camera:WorldToScreenPoint(TargetPosition)
+        local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(TargetPosition)
         
         v:ToggleVisibility(OnScreen)
         if not OnScreen then return end
