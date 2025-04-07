@@ -85,12 +85,12 @@ RunService.RenderStepped:Connect(function()
         local TargetPosition = v.Object:GetPivot().Position
         local ScreenPosition, OnScreen = Camera:WorldToScreenPoint(TargetPosition)
         
-        ESP:ToggleVisibility(OnScreen)
+        v:ToggleVisibility(OnScreen)
         if not OnScreen then return end
         
         local Distance = LP:DistanceFromCharacter(TargetPosition)
         if Distance > Library.MaxDistance then
-            ESP:ToggleVisibility(false)
+            v:ToggleVisibility(false)
             return
         end
         
