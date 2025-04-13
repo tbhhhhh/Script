@@ -304,6 +304,7 @@ local blocklist = {}
 local getNil = false
 --- Array of remotes (and original functions) connected to
 local connectedRemotes = {}
+local disabledRemotes = {}
 local hooks = {}
 --- True = hookfunction, false = namecall
 local toggle = false
@@ -1435,7 +1436,7 @@ end
 
 --- instance-to-path
 --- @param i userdata
-function i2p(i,customgen) 
+function i2p(i,customgen)
     if customgen then
         return customgen
     end
@@ -1943,6 +1944,19 @@ for _, v in next, getnilinstances() do
 end
 connections["DescendantAdded"] = game.DescendantAdded:Connect(receiveRemote)
 
+local function disableRemote()
+    if selected and selected.method == "OnClientEvent" then
+        for i, v in pairs(getconnections(selected.Remote.OnClientEvent)) do
+            if v.Function and getfenv(v.Function).script ~= script then
+                v:Disable()
+                table.insert(disabledRemotes, function()
+                    v:Enable()
+                end)
+            end
+       end
+    end
+end
+
 --- Shuts down the remote spy
 local function shutdown()
     if schedulerconnect then
@@ -2252,6 +2266,7 @@ newButton(
     function() return "Click to stop this remote from firing.\nBlocking a remote won't remove it from SimpleSpy logs, but it will not continue to fire the server." end,
     function()
         if selected then
+            disableRemote()
             blocklist[OldDebugId(selected.Remote)] = true
             TextLabel.Text = "Excluded!"
         end
@@ -2263,6 +2278,7 @@ newButton("Block (n)",function()
     return "Click to stop remotes with this name from firing.\nBlocking a remote won't remove it from SimpleSpy logs, but it will not continue to fire the server." end,
     function()
         if selected then
+            disableRemote()
             blocklist[selected.Name] = true
             TextLabel.Text = "Excluded!"
         end
@@ -2274,6 +2290,10 @@ newButton(
     "Clr Blocklist",
     function() return "Click to stop blocking remotes.\nBlocking a remote won't remove it from SimpleSpy logs, but it will not continue to fire the server." end,
     function()
+        for i, v in next, disabledRemotes do
+            task.spawn(v)
+        end
+        disabledRemotes = {}
         blocklist = {}
         TextLabel.Text = "Blocklist cleared!"
     end
