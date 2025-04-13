@@ -14,8 +14,7 @@ local realconfigs = {
     advancedinfo = false,
     logreturnvalues = false,
     logfireclient = false,
-    loginvokeclient = false,
-    supersecretdevtoggle = false
+    loginvokeclient = false
 }
 
 local configs = newproxy(true)
@@ -94,6 +93,25 @@ local hookmetamethod = hookmetamethod or (makewriteable and makereadonly and get
         return oldmetamethod
     end
 end
+
+local decompile = decompile or newcclosure(function(target)
+    local bytecode = getscriptbytecode(target)
+    if bytecode then
+        local output = request({
+            Url = "http://api.plusgiant5.com/konstant/decompile",
+            Method = "POST",
+            Body = bytecode,
+			Headers = {
+				["Content-Type"] = "text/plain"
+			}
+        })
+        if output.StatusCode == 200 then
+            return output.Body
+        end
+        return "-- failed to decompile bytecode: " .. output.StatusMessage
+    end
+	return "-- failed to decompile bytecode"
+end)
 
 local function Create(instance, properties, children)
     local obj = Instance.new(instance)
@@ -1417,7 +1435,7 @@ end
 
 --- instance-to-path
 --- @param i userdata
-function i2p(i,customgen)
+function i2p(i,customgen) 
     if customgen then
         return customgen
     end
@@ -1463,16 +1481,18 @@ function i2p(i,customgen)
             elseif not parent.Parent then
                 getnilrequired = true
                 return 'getNil(' .. formatstr(parent.Name) .. ', "' .. parent.ClassName .. '")' .. out
-            else
+            elseif parent == Players.LocalPlayer then
+				out = ".LocalPlayer" .. out
+			else
                 if parent.Name:match("[%a_]+[%w_]*") ~= parent.Name then
                     out = ':WaitForChild(' .. formatstr(parent.Name) .. ')' .. out
                 else
                     out = ':WaitForChild("' .. parent.Name .. '")'..out
                 end
             end
-            if i:IsDescendantOf(Players.LocalPlayer) then
+            --[[if i:IsDescendantOf(Players.LocalPlayer) then
                 return 'game:GetService("Players").LocalPlayer'..out
-            end
+            end]]
             parent = parent.Parent
             task.wait()
         end
@@ -1767,18 +1787,14 @@ local newindex = function(method,originalfunction,...)
                     local calling = getcallingscript()
                     data.callingscript = calling and cloneref(calling) or nil
                 end
-                if configs.logreturnvalues and remote:IsA("RemoteFunction") then
-                    local returndata = originalfunction(...)
-                    data.returnvalue.data = returndata
-                    schedule(remoteHandler,data)
-                    if not blockcheck then
-                        return returndata
-                    else
-                        return
-                    end
-                end
 
                 schedule(remoteHandler,data)
+                
+                if configs.logreturnvalues and IsA(remote, "RemoteFunction") and not blockcheck then
+                    local returndata = originalNamecall(...)
+                    data.returnvalue.data = returndata
+                    return returndata
+                end
             end
             if blockcheck then return end
         end
@@ -1818,18 +1834,14 @@ local newnamecall = newcclosure(function(...)
                         local calling = getcallingscript()
                         data.callingscript = calling and cloneref(calling) or nil
                     end
-                    if configs.logreturnvalues and IsA(remote,"RemoteFunction") then
-                        local returndata = originalNamecall(...)
-                        data.returnvalue.data = returndata
-                        schedule(remoteHandler,data)
-                        if not blockcheck then
-                            return returndata
-                        else
-                            return
-                        end
-                    end
 
                     schedule(remoteHandler,data)
+                    
+                    if configs.logreturnvalues and IsA(remote, "RemoteFunction") and not blockcheck then
+                        local returndata = originalNamecall(...)
+                        data.returnvalue.data = returndata
+                        return returndata
+                    end
                 end
                 if blockcheck then return end
             end
@@ -2093,6 +2105,8 @@ newButton("Run Code",
                 local returnvalue
                 if selected.method == "OnClientEvent" then
                     returnvalue = firesignal(Remote.OnClientEvent, unpack(selected.args))
+                elseif selected.method == "OnClientInvoke" then
+                    returnvalue = getcallbackvalue and getcallbackvalue(v, "OnClientInvoke")
                 else
                     returnvalue = Remote[selected.method](Remote, unpack(selected.args))
                 end
@@ -2270,30 +2284,22 @@ newButton("Decompile",
     function()
         return "Decompile source script"
     end,function()
-        if decompile then
-            if selected and selected.Source then
-                local Source = selected.Source
-                if not DecompiledScripts[Source] then
-                    codebox:setRaw("--[[Decompiling]]")
+        if selected and selected.Source then
+            local Source = selected.Source
+            if not DecompiledScripts[Source] then
+                codebox:setRaw("--[[Decompiling]]")
 
-                    xpcall(function()
-                        local decompiledsource = decompile(Source):gsub("-- Decompiled with the Synapse X Luau decompiler.","")
-                        local Sourcev2s = v2s(Source)
-                        if (decompiledsource):find("script") and Sourcev2s then
-                            DecompiledScripts[Source] = ("local script = %s\n%s"):format(Sourcev2s,decompiledsource)
-                        end
-                    end,function(err)
-                        return codebox:setRaw(("--[[\nAn error has occured\n%s\n]]"):format(err))
-                    end)
-                end
-                codebox:setRaw(DecompiledScripts[Source] or "--No Source Found")
-                TextLabel.Text = "Done!"
-            else
-                TextLabel.Text = "Source not found!"
+                xpcall(function()
+                    DecompiledScripts[Source] = decompile(Source)
+                end,function(err)
+                    return codebox:setRaw(("--[[\nAn error has occured\n%s\n]]"):format(err))
+                end)
             end
-        else
-            TextLabel.Text = "Missing function (decompile)"
-        end
+            codebox:setRaw(DecompiledScripts[Source] or "--No Source Found")
+           TextLabel.Text = "Done!"
+       else
+           TextLabel.Text = "Source not found!"
+       end
     end
 )
 
@@ -2304,11 +2310,11 @@ newButton(
         if selected then
             local Remote = selected.Remote
             if Remote and Remote:IsA("RemoteFunction") then
-                if selected.returnvalue and selected.returnvalue.data ~= nil then
-                    codebox:setRaw("return "..LazyFix.Serialize(selected.returnvalue.data, true))
-                else
-                    codebox:setRaw("No data was returned")
+                if not configs.logreturnvalues then
+                    codebox:setRaw("Enable log returnvalues first")
+                    return
                 end
+                codebox:setRaw("return "..LazyFix.Serialize(selected.returnvalue.data, true))
             else
                 codebox:setRaw("RemoteFunction expected got "..(Remote and Remote.ClassName))
             end
@@ -2375,39 +2381,3 @@ function()
     configs.loginvokeclient = not configs.loginvokeclient
     TextLabel.Text = ("[%s] Log Server InvokeClient"):format(configs.loginvokeclient and "ENABLED" or "DISABLED")
 end)
-
-newButton("Join Discord",function()
-    return "Joins The Simple Spy Discord"
-end,
-function()
-    setclipboard("https://discord.com/invite/AWS6ez9")
-    TextLabel.Text = "Copied invite to your clipboard"
-    if request then
-        request({Url = 'http://127.0.0.1:6463/rpc?v=1',Method = 'POST',Headers = {['Content-Type'] = 'application/json', Origin = 'https://discord.com'},Body = http:JSONEncode({cmd = 'INVITE_BROWSER',nonce = http:GenerateGUID(false),args = {code = 'AWS6ez9'}})})
-    end
-end)
-
-if configs.supersecretdevtoggle then
-    newButton("Load SSV2.2",function()
-        return "Load's Simple Spy V2.2"
-    end,
-    function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/exxtremestuffs/SimpleSpySource/master/SimpleSpy.lua"))()
-    end)
-    newButton("Load SSV3",function()
-        return "Load's Simple Spy V3"
-    end,
-    function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/SimpleSpy/main/SimpleSpySource.lua"))()
-    end)
-    local SuperSecretFolder = Create("Folder",{Parent = SimpleSpy3})
-    newButton("SUPER SECRET BUTTON",function()
-        return "You dont need a discription you already know what it does"
-    end,
-    function()
-        SuperSecretFolder:ClearAllChildren()
-        local random = listfiles("Music")
-        local NotSound = Create("Sound",{Parent = SuperSecretFolder,Looped = false,Volume = math.random(1,5),SoundId = getsynasset(random[math.random(1,#random)])})
-        NotSound:Play()
-    end)
-end
