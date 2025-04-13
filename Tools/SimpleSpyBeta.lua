@@ -1792,7 +1792,7 @@ local newindex = function(method,originalfunction,...)
                 schedule(remoteHandler,data)
                 
                 if configs.logreturnvalues and IsA(remote, "RemoteFunction") and not blockcheck then
-                    local returndata = originalNamecall(...)
+                    local returndata = originalfunction(...)
                     data.returnvalue.data = returndata
                     return returndata
                 end
@@ -1810,7 +1810,7 @@ local newnamecall = newcclosure(function(...)
         if typeof(...) == 'Instance' then
             local remote = cloneref(...)
 
-            if IsA(remote,"RemoteEvent") or IsA(remote,"RemoteFunction") or IsA(remote,"UnreliableRemoteEvent") then    
+            if IsA(remote,"RemoteEvent") or IsA(remote,"RemoteFunction") or IsA(remote,"UnreliableRemoteEvent") then
                 if not configs.logcheckcaller and checkcaller() then return originalNamecall(...) end
                 local id = ThreadGetDebugId(remote)
                 local blockcheck = tablecheck(blocklist,remote,id)
