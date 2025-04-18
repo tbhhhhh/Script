@@ -9,12 +9,23 @@ local RunService = cloneref(game:GetService("RunService"))
 local LP = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
+local function GetDistance(position)
+    local rootPart = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+	if rootPart then
+	    return (rootPart.Position - position).Magnitude
+	elseif Camera then
+	    return (Camera.CFrame.Position - position).Magnitude
+	end
+	return 9e9
+end
+
 local Library = {
     ESP = {},
     ESPFolder = Instance.new("Folder", CoreGui),
     ShowDistance = true,
     MaxDistance = math.huge
 }
+
 Library.ESPFolder.Name = "ESPFolder"
 Library.Highlight = function(object, name, color, size, tag)
     local ESP = {
@@ -23,6 +34,7 @@ Library.Highlight = function(object, name, color, size, tag)
         Name = name,
         Tag = tag
     }
+    
     local BillboardGui = Instance.new("BillboardGui", Library.ESPFolder)
     BillboardGui.Name = tag
     BillboardGui.Enabled = true
@@ -59,7 +71,7 @@ Library.Highlight = function(object, name, color, size, tag)
     ESP.Highlight = Highlight
     
     function ESP:Destroy()
-        BillboardGui:Destroy()
+        if BillboardGui then BillboardGui:Destroy() end
         Library.ESP[ESP.Index] = nil
     end
     
@@ -73,31 +85,36 @@ Library.Highlight = function(object, name, color, size, tag)
 end
 
 Library.Clear = function(tag)
-    for _, v in pairs(Library.ESP) do
-        if v.Tag == tag then
-            v:Destroy()
+    for _, ESP in pairs(Library.ESP) do
+        if ESP.Tag == tag then
+            ESP:Destroy()
         end
     end
 end
 
 RunService.RenderStepped:Connect(function()
-    for _, v in pairs(Library.ESP) do
-        local TargetPosition = v.Object:GetPivot().Position
+    for _, ESP in pairs(Library.ESP) do
+        if not ESP.Object or not ESP.Object.Parent then
+			ESP:Destroy()
+			continue
+		end
+        
+        local TargetPosition = ESP.Object:GetPivot().Position
         local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(TargetPosition)
         
-        v:ToggleVisibility(OnScreen)
-        if not OnScreen then return end
+        ESP:ToggleVisibility(OnScreen)
+        if not OnScreen then continue end
         
-        local Distance = LP:DistanceFromCharacter(TargetPosition)
+        local Distance = GetDistance(TargetPosition)
         if Distance > Library.MaxDistance then
-            v:ToggleVisibility(false)
-            return
+            ESP:ToggleVisibility(false)
+            continue
         end
         
         if Library.ShowDistance then
-            v.TextLabel.Text = ("%s\n[%s]"):format(v.Name, math.floor(Distance))
+            ESP.TextLabel.Text = ("%s\n[%s]"):format(ESP.Name, math.floor(Distance))
         else
-            v.TextLabel.Text = v.Name
+            ESP.TextLabel.Text = ESP.Name
         end
     end
 end)
