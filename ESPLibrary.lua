@@ -27,7 +27,7 @@ local Library = {
 }
 
 Library.ESPFolder.Name = "ESPFolder"
-Library.Highlight = function(object, name, color, size, tag)
+Library.Add = function(object, name, color, size, tag)
     local ESP = {
         Index = #Library.ESP+1,
         Object = object,
@@ -83,6 +83,7 @@ Library.Highlight = function(object, name, color, size, tag)
     Library.ESP[ESP.Index] = ESP
     return ESP
 end
+Library.Highlight=Library.Add
 
 Library.Clear = function(tag)
     for _, ESP in pairs(Library.ESP) do
