@@ -1,29 +1,44 @@
-if _G.Loaded then
-    warn("请勿重复加载")
+if getgenv().Loaded then
+    warn("HttpSpy is already running!")
     return
 else
-    _G.Loaded = true
+    getgenv().Loaded = true
     print("HttpSpy Enabled")
 end
 
-local methods = {
-    HttpGet = true,
-    HttpGetAsync = true,
-    HttpPost = true,
-    HttpPostAsync = true,
-    GetObjects = true
+local config = {
+    methods = {
+        HttpGet = true,
+        HttpGetAsync = true,
+        HttpPost = true,
+        HttpPostAsync = true,
+        GetObjects = true,
+        Request = true
+    },
+    BlockWebhook = true
 }
+local methods = config.methods
 
-local appendfileF = clonefunction(appendfile)
-local logname = string.format("%s.%s_log.txt", os.date("%m"), os.date("%d"))
+local serialize = loadstring(game:HttpGet("https://raw.githubusercontent.com/Xingtaiduan/Script/refs/heads/main/Tools/Serialize.lua"))()
+local clonef = clonefunction or function(a) return a end
+local date = clonef(os.date)
+local isfile = clonef(isfile)
+local writefile = clonef(writefile)
+local appendfile = clonef(appendfile)
+local newcclosure = clonef(newcclosure)
+local checkcaller = clonef(checkcaller)
+local format = clonef(string.format)
+local match = clonef(string.match)
+local getnamecallmethod = clonef(getnamecallmethod)
 
+local logname = format("%s.%s_log.txt", date("%m"), date("%d"))
 if not isfile(logname) then writefile(logname, "") end
 
 local function printf(...)
-    appendfileF(logname, ...)
+    appendfile(logname, ...)
 end
 
-printf(os.date("%H:%M\n\n"))
+printf(date("%H:%M\n\n"))
 
 local nilfunc = function() end
 
@@ -35,26 +50,43 @@ local HttpFunction = {
     GetObjects = game.GetObjects or nilfunc
 }
 
-local HttpMethod = newcclosure(function(self, method, url, ...)
-    printf(string.format("%s: %s\n\n", method, url))
-    return HttpFunction[method](self, url, ...)
-end)
+local HttpMethod = function(self, method, ...)
+    local url = ({...})[1]
+    printf(format("game:%s(%s)\n\n", method, serialize(...)))
+    if config.BlockWebhook and match(data.Url, "webhook") then
+        printf("Successfully blocked webhook url: "..url.."\n\n")
+        return
+    end
+    return HttpFunction[method](self, ...)
+end
 
 local oldnamecall
 oldnamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
-    local method = getnamecallmethod()
-    if checkcaller() and methods[method] then
+	local method = getnamecallmethod()
+	if checkcaller() and methods[method] then
         return HttpMethod(self, method, ...)
-    end
-    return oldnamecall(self, ...)
+	end
+	return oldnamecall(self, ...)
 end))
 
 local oldindex
 oldindex = hookmetamethod(game, "__index", newcclosure(function(self, key)
     if checkcaller() and self == game and methods[key] then
-        return function(self, ...)
+        return newcclosure(function(self, ...)
             return HttpMethod(self, key, ...)
-        end
+        end)
     end
     return oldindex(self, key)
+end))
+
+local oldrequest
+oldrequest = hookfunction(request, newcclosure(function(data)
+    if methods.Request then
+        printf("request("..serialize(data)..")\n\n")
+    end
+    if config.BlockWebhook and match(data.Url, "webhook") then
+        printf("Successfully blocked webhook url: "..data.Url.."\n\n")
+        return
+    end
+    return oldrequest(data)
 end))
