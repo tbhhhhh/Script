@@ -53,7 +53,7 @@ local HttpFunction = {
 local HttpMethod = function(self, method, ...)
     local url = ({...})[1]
     printf(format("game:%s(%s)\n\n", method, serialize(...)))
-    if config.BlockWebhook and match(data.Url, "webhook") then
+    if config.BlockWebhook and match(url, "webhook") then
         printf("Successfully blocked webhook url: "..url.."\n\n")
         return
     end
