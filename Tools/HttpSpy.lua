@@ -7,7 +7,7 @@ else
 end
 
 local config = {
-    methods = {
+    tologs = {
         HttpGet = true,
         HttpGetAsync = true,
         HttpPost = true,
@@ -17,9 +17,11 @@ local config = {
     },
     BlockWebhook = true
 }
-local methods = config.methods
+local tologs = config.tologs
 
 local serialize = loadstring(game:HttpGet("https://raw.githubusercontent.com/Xingtaiduan/Script/refs/heads/main/Tools/Serialize.lua"))()
+local HttpService = game:GetService("HttpService")
+
 local clonef = clonefunction or function(a) return a end
 local date = clonef(os.date)
 local isfile = clonef(isfile)
@@ -47,13 +49,14 @@ local HttpFunction = {
     HttpGetAsync = game.HttpGetAsync or nilfunc,
     HttpPost = game.HttpPost or nilfunc,
     HttpPostAsync = game.HttpPostAsync or nilfunc,
-    GetObjects = game.GetObjects or nilfunc
+    GetObjects = game.GetObjects or nilfunc,
+    RequestInternal = HttpService.RequestInternal
 }
 
 local HttpMethod = function(self, method, ...)
-    local url = ({...})[1]
-    printf(format("game:%s(%s)\n\n", method, serialize(...)))
-    if config.BlockWebhook and match(url, "webhook") then
+    local url = typeof(...) == "table" and (...).Url or ...
+    printf(format("%s:%s(%s)\n\n", serialize(self), method, serialize(...)))
+    if config.BlockWebhook and typeof(url) == "string" and match(url, "webhook") then
         printf("Successfully blocked webhook url: "..url.."\n\n")
         return
     end
@@ -63,25 +66,35 @@ end
 local oldnamecall
 oldnamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
 	local method = getnamecallmethod()
-	if checkcaller() and methods[method] then
-        return HttpMethod(self, method, ...)
+	if checkcaller() then
+	    if self == game and tologs[method] then
+            return HttpMethod(self, method, ...)
+        elseif self == HttpService and tologs.Request and method == "RequestInternal" then
+            return HttpMethod(self, method, ...)
+        end
 	end
 	return oldnamecall(self, ...)
 end))
 
 local oldindex
 oldindex = hookmetamethod(game, "__index", newcclosure(function(self, key)
-    if checkcaller() and self == game and methods[key] then
-        return newcclosure(function(self, ...)
-            return HttpMethod(self, key, ...)
-        end)
+    if checkcaller() then
+        if self == game and tologs[key] then
+            return newcclosure(function(self, ...)
+                return HttpMethod(self, key, ...)
+            end)
+        elseif self == HttpService and tologs.Request and method == "RequestInternal" then
+            return newcclosure(function(self, ...)
+                return HttpMethod(self, key, ...)
+            end)
+        end
     end
     return oldindex(self, key)
 end))
 
 local oldrequest
-oldrequest = hookfunction(request, newcclosure(function(data)
-    if methods.Request then
+hookfunction(request, newcclosure(function(data)
+    if tologs.Request then
         printf("request("..serialize(data)..")\n\n")
     end
     if config.BlockWebhook and match(data.Url, "webhook") then
