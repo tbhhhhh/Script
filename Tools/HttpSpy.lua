@@ -83,7 +83,7 @@ oldindex = hookmetamethod(game, "__index", newcclosure(function(self, key)
             return newcclosure(function(self, ...)
                 return HttpMethod(self, key, ...)
             end)
-        elseif self == HttpService and tologs.Request and method == "RequestInternal" then
+        elseif self == HttpService and tologs.Request and key == "RequestInternal" then
             return newcclosure(function(self, ...)
                 return HttpMethod(self, key, ...)
             end)
@@ -93,7 +93,7 @@ oldindex = hookmetamethod(game, "__index", newcclosure(function(self, key)
 end))
 
 local oldrequest
-hookfunction(request, newcclosure(function(data)
+oldrequest = hookfunction(request, newcclosure(function(data)
     if tologs.Request then
         printf("request("..serialize(data)..")\n\n")
     end
