@@ -65,15 +65,15 @@ end
 
 local oldnamecall
 oldnamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
-	local method = getnamecallmethod()
-	if checkcaller() then
-	    if self == game and tologs[method] then
+    local method = getnamecallmethod()
+    if checkcaller() then
+        if self == game and tologs[method] then
             return HttpMethod(self, method, ...)
         elseif self == HttpService and tologs.Request and method == "RequestInternal" then
             return HttpMethod(self, method, ...)
         end
-	end
-	return oldnamecall(self, ...)
+    end
+    return oldnamecall(self, ...)
 end))
 
 local oldindex
