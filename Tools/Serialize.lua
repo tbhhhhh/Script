@@ -45,15 +45,56 @@ local function string_ret(v, typ)
     return ret
 end
 
+local function formatstr(str)
+    return str:gsub("\n", "\\n"):gsub("\t", "\\t"):gsub("\r", "\\r"):gsub("\"", "\\\"")
+end
+
+local function getInstancePath(obj)
+    local path = ""
+    while obj do
+        local indexName
+        if string.match(obj.Name,"^[%a_][%w_]*$") then
+            indexName = "." .. formatstr(obj.Name)
+        else
+            indexName = '["'..formatstr(obj.Name)..'"]'
+        end
+        if obj == game then
+            path = "game"..path
+            break
+        elseif obj.Parent == game then
+            if obj == workspace then
+                path = "workspace" .. path
+                break
+            elseif game:FindService(obj.ClassName) then
+                indexName = ":GetService(\"" .. obj.ClassName:gsub(" ", "") .. "\")"
+            end
+        elseif obj.Parent then
+            local fc = obj.Parent:FindFirstChild(obj.Name)
+            if fc and fc ~= obj then
+                local children = obj.Parent:GetChildren()
+                local index = table.find(children, obj)
+                indexName = ":GetChildren()[" .. index .. "]"
+            end
+        elseif not obj.Parent then
+            path = "Instance.new(\""..obj.ClassName.."\")"
+            break
+        end
+        path = indexName..path
+        obj = obj.Parent
+    end
+
+    return path
+end
+
 local function format_value(v)
     local typ = typeof(v)
 
     if str_types[typ] then
         return string_ret(v, typ)
     elseif typ == "string" then
-        return '"' .. v:gsub('(["\n])', {['"'] = '\\"', ['\n'] = '\\n'}) .. '"'
+        return "\"".. formatstr(v) .."\""
     elseif typ == "Instance" then
-        return v.Parent and "game."..v:GetFullName() or string.format('Instance.new("%s")', v.ClassName)
+        return getInstancePath(v)
     else
         return typ..".new(" .. tostring(v) .. ")"
     end
@@ -82,7 +123,8 @@ local function serialize_table(t, p, c, s)
             isNaN = true
             v = "NaN"
         end
-        c[i], c[v] = (not c[i] and typ_i) and {i, p} or c[i], (not c[v] and typ_v) and {v, p} or c[v]
+        c[i] = (not c[i] and typ_i) and {i, p} or c[i]
+        c[v] = (not c[v] and typ_v) and {v, p} or c[v]
         str = str .. s("    ", p) .. "[" .. localized_format(i, typ_i) .. "] = "  .. localized_format(v, typ_v, isNaN) .. (ti < n and "," or "") .. "\n"
         ti = ti + 1
     end
