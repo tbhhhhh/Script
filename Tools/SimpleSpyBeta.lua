@@ -24,10 +24,6 @@ configsmetatable.__index = function(self,index)
     return realconfigs[index]
 end
 
-local oth = syn and syn.oth
-local unhook = oth and oth.unhook
-local hook = oth and oth.hook
-
 local lower = string.lower
 local byte = string.byte
 local round = math.round
@@ -244,7 +240,7 @@ function ErrorPrompt(Message,state)
 end
 
 local Highlight = (isfile and loadfile and isfile("Highlight.lua") and loadfile("Highlight.lua")()) or loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/SimpleSpy/main/Highlight.lua"))()
-local LazyFix = loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/SimpleSpy/refs/heads/main/Dependencies/Libraries/Serializer.luau"))() -- Very lazy fix as I'm legit just pasting it from the rewrite
+local Serialize = loadstring(game:HttpGet("https://raw.githubusercontent.com/Xingtaiduan/Script/refs/heads/main/Tools/Serializer.lua"))().Serialize
 
 local SimpleSpy3 = Create("ScreenGui",{Name = "SimpleSpy",ResetOnSpawn = false})
 local Storage = Create("Folder",{})
@@ -357,15 +353,6 @@ end
 
 local function ThreadGetDebugId(obj: Instance): string 
     return GetDebugIDInvoke(GetDebugIdHandler,obj) -- indexing to avoid having to setnamecall later
-end
-
-local synv3 = false
-
-if syn and identifyexecutor then
-    local _, version = identifyexecutor()
-    if (version and version:sub(1, 2) == 'v3') then
-        synv3 = true
-    end
 end
 
 xpcall(function()
@@ -870,15 +857,6 @@ function backgroundUserInput(input)
     end
 end
 
---- Gets the player an instance is descended from
-function getPlayerFromInstance(instance)
-    for _, v in next, Players:GetPlayers() do
-        if v.Character and (instance:IsDescendantOf(v.Character) or instance == v.Character) then
-            return v
-        end
-    end
-end
-
 --- Runs on MouseButton1Click of an event frame
 function eventSelect(frame)
     if selected and selected.Log  then
@@ -1067,237 +1045,28 @@ function genScript(remote, args, method)
     prevTables = {}
     local gen = ""
     if #args > 0 then
-        xpcall(function()
-            gen = "local args = "..LazyFix.Serialize(args, true) .. "\n"
-        end,function(err)
-            gen ..= "-- An error has occured:\n--"..err.."\n-- TableToString failure! Reverting to legacy functionality (results may vary)\nlocal args = {"
-            xpcall(function()
-                for i, v in next, args do
-                    if type(i) ~= "Instance" and type(i) ~= "userdata" then
-                        gen = gen .. "\n    [object] = "
-                    elseif type(i) == "string" then
-                        gen = gen .. '\n    ["' .. i .. '"] = '
-                    elseif type(i) == "userdata" and typeof(i) ~= "Instance" then
-                        gen = gen .. "\n    [" .. string.format("nil --[[%s]]", typeof(v)) .. ")] = "
-                    elseif type(i) == "userdata" then
-                         gen = gen .. "\n    [game." .. i:GetFullName() .. ")] = "
-                    end
-                    if type(v) ~= "Instance" and type(v) ~= "userdata" then
-                        gen = gen .. "object"
-                    elseif type(v) == "string" then
-                        gen = gen .. '"' .. v .. '"'
-                    elseif type(v) == "userdata" and typeof(v) ~= "Instance" then
-                        gen = gen .. string.format("nil --[[%s]]", typeof(v))
-                    elseif type(v) == "userdata" then
-                        gen = gen .. "game." .. v:GetFullName()
-                    end
-                end
-                gen ..= "\n}\n\n"
-            end,function()
-                gen ..= "}\n-- Legacy tableToString failure! Unable to decompile."
-            end)
-        end)
+        gen = "local args = "..Serialize(args) .. "\n"
         if not remote:IsDescendantOf(game) and not getnilrequired then
             gen = "function getNil(name,class) for _,v in next, getnilinstances()do if v.ClassName==class and v.Name==name then return v;end end end\n\n" .. gen
         end
         if method == "OnClientEvent" then
-            gen ..= "firesignal("..LazyFix.SerializeKnown("Instance", remote)..".OnClientEvent, unpack(args))"
+            gen ..= "firesignal("..Serialize(remote)..".OnClientEvent, unpack(args))"
         elseif method == "OnClientInvoke" then
-            gen ..= "getcallbackvalue("..LazyFix.SerializeKnown("Instance", remote)..", \"OnClientInvoke\")(unpack(args))"
+            gen ..= "getcallbackvalue("..Serialize(remote)..", \"OnClientInvoke\")(unpack(args))"
         else
-            gen ..= LazyFix.SerializeKnown("Instance", remote) .. ":"..method.."(unpack(args))"
+            gen ..= Serialize(remote) .. ":"..method.."(unpack(args))"
         end
     else
         if method == "OnClientEvent" then
-            gen ..= "firesignal("..LazyFix.SerializeKnown("Instance", remote) .. ".OnClientEvent)"
+            gen ..= "firesignal("..Serialize(remote) .. ".OnClientEvent)"
         elseif method == "OnClientInvoke" then
-            gen ..= "getcallbackvalue("..LazyFix.SerializeKnown("Instance", remote)..", \"OnClientInvoke\")()"
+            gen ..= "getcallbackvalue("..Serialize(remote)..", \"OnClientInvoke\")()"
         else
-            gen ..= LazyFix.SerializeKnown("Instance", remote) .. ":"..method.."()"
+            gen ..= Serialize(remote) .. ":"..method.."()"
         end
     end
     prevTables = {}
     return gen
-end
-
---- value-to-string: value, string (out), level (indentation), parent table, var name, is from tovar
-local CustomGeneration = {
-    Vector3 = (function()
-        local temp = {}
-        for i,v in Vector3 do
-            if type(v) == "vector" then
-                temp[v] = `Vector3.{i}`
-            end
-        end
-        return temp
-    end)(),
-    Vector2 = (function()
-        local temp = {}
-        for i,v in Vector2 do
-            if type(v) == "userdata" then
-                temp[v] = `Vector2.{i}`
-            end
-        end
-        return temp
-    end)(),
-    CFrame = {
-        [CFrame.identity] = "CFrame.identity"
-    }
-}
-
-local number_table = {
-    ["inf"] = "math.huge",
-    ["-inf"] = "-math.huge",
-    ["nan"] = "0/0"
-}
-
-local ufunctions
-ufunctions = {
-    TweenInfo = function(u)
-        return `TweenInfo.new({u.Time}, {u.EasingStyle}, {u.EasingDirection}, {u.RepeatCount}, {u.Reverses}, {u.DelayTime})`
-    end,
-    Ray = function(u)
-        local Vector3tostring = ufunctions["Vector3"]
-
-        return `Ray.new({Vector3tostring(u.Origin)}, {Vector3tostring(u.Direction)})`
-    end,
-    BrickColor = function(u)
-        return `BrickColor.new({u.Number})`
-    end,
-    NumberRange = function(u)
-        return `NumberRange.new({u.Min}, {u.Max})`
-    end,
-    Region3 = function(u)
-        local center = u.CFrame.Position
-        local centersize = u.Size/2
-        local Vector3tostring = ufunctions["Vector3"]
-
-        return `Region3.new({Vector3tostring(center-centersize)}, {Vector3tostring(center+centersize)})`
-    end,
-    Faces = function(u)
-        local faces = {}
-        if u.Top then
-            table.insert(faces, "Top")
-        end
-        if u.Bottom then
-            table.insert(faces, "Enum.NormalId.Bottom")
-        end
-        if u.Left then
-            table.insert(faces, "Enum.NormalId.Left")
-        end
-        if u.Right then
-            table.insert(faces, "Enum.NormalId.Right")
-        end
-        if u.Back then
-            table.insert(faces, "Enum.NormalId.Back")
-        end
-        if u.Front then
-            table.insert(faces, "Enum.NormalId.Front")
-        end
-        return `Faces.new({table.concat(faces, ", ")})`
-    end,
-    EnumItem = function(u)
-        return tostring(u)
-    end,
-    Enums = function(u)
-        return "Enum"
-    end,
-    Enum = function(u)
-        return `Enum.{u}`
-    end,
-    Vector3 = function(u)
-        return CustomGeneration.Vector3[u] or `Vector3.new({u})`
-    end,
-    Vector2 = function(u)
-        return CustomGeneration.Vector2[u] or `Vector2.new({u})`
-    end,
-    CFrame = function(u)
-        return CustomGeneration.CFrame[u] or `CFrame.new({table.concat({u:GetComponents()},", ")})`
-    end,
-    PathWaypoint = function(u)
-        return `PathWaypoint.new({ufunctions["Vector3"](u.Position)}, {u.Action}, "{u.Label}")`
-    end,
-    UDim = function(u)
-        return `UDim.new({u})`
-    end,
-    UDim2 = function(u)
-        return `UDim2.new({u})`
-    end,
-    Rect = function(u)
-        local Vector2tostring = ufunctions["Vector2"]
-        return `Rect.new({Vector2tostring(u.Min)}, {Vector2tostring(u.Max)})`
-    end,
-    Color3 = function(u)
-        return `Color3.new({u.R}, {u.G}, {u.B})`
-    end,
-    RBXScriptSignal = function(u) -- The server doesnt recive this
-        return "RBXScriptSignal --[[RBXScriptSignal's are not supported]]"
-    end,
-    RBXScriptConnection = function(u) -- The server doesnt recive this
-        return "RBXScriptConnection --[[RBXScriptConnection's are not supported]]"
-    end,
-}
-
-local typeofv2sfunctions = {
-    number = function(v)
-        local number = tostring(v)
-        return number_table[number] or number
-    end,
-    boolean = function(v)
-        return tostring(v)
-    end,
-    string = function(v,l)
-        return formatstr(v, l)
-    end,
-    ["function"] = function(v) -- The server doesnt recive this
-        return f2s(v)
-    end,
-    table = function(v, l, p, n, vtv, i, pt, path, tables, tI)
-        return t2s(v, l, p, n, vtv, i, pt, path, tables, tI)
-    end,
-    Instance = function(v)
-        local DebugId = OldDebugId(v)
-        return i2p(v,generation[DebugId])
-    end,
-    userdata = function(v) -- The server doesnt recive this
-        if configs.advancedinfo then
-            if getrawmetatable(v) then
-                return "newproxy(true)"
-            end
-            return "newproxy(false)"
-        end
-        return "newproxy(true)"
-    end
-}
-
-local typev2sfunctions = {
-    userdata = function(v,vtypeof)
-        if ufunctions[vtypeof] then
-            return ufunctions[vtypeof](v)
-        end
-        return `{vtypeof}({rawtostring(v)}) --[[Generation Failure]]`
-    end,
-    vector = ufunctions["Vector3"]
-}
-
-
-function v2s(v, l, p, n, vtv, i, pt, path, tables, tI)
-    local vtypeof = typeof(v)
-    local vtypeoffunc = typeofv2sfunctions[vtypeof]
-    local vtypefunc = typev2sfunctions[type(v)]
-    local vtype = type(v)
-    if not tI then
-        tI = {0}
-    else
-        tI[1] += 1
-    end
-
-    if vtypeoffunc then
-        return vtypeoffunc(v, l, p, n, vtv, i, pt, path, tables, tI)
-    elseif vtypefunc then
-        return vtypefunc(v,vtypeof)
-    end
-    return `{vtypeof}({rawtostring(v)}) --[[Generation Failure]]`
 end
 
 --- value-to-variable
@@ -1310,11 +1079,11 @@ function v2v(t)
     local count = 1
     for i, v in next, t do
         if type(i) == "string" and i:match("^[%a_]+[%w_]*$") then
-            ret = ret .. "local " .. i .. " = " .. v2s(v, nil, nil, i, true) .. "\n"
+            ret = ret .. "local " .. i .. " = " .. Serialize(v, nil, nil, i, true) .. "\n"
         elseif rawtostring(i):match("^[%a_]+[%w_]*$") then
-            ret = ret .. "local " .. lower(rawtostring(i)) .. "_" .. rawtostring(count) .. " = " .. v2s(v, nil, nil, lower(rawtostring(i)) .. "_" .. rawtostring(count), true) .. "\n"
+            ret = ret .. "local " .. lower(rawtostring(i)) .. "_" .. rawtostring(count) .. " = " .. Serialize(v, nil, nil, lower(rawtostring(i)) .. "_" .. rawtostring(count), true) .. "\n"
         else
-            ret = ret .. "local " .. type(v) .. "_" .. rawtostring(count) .. " = " .. v2s(v, nil, nil, type(v) .. "_" .. rawtostring(count), true) .. "\n"
+            ret = ret .. "local " .. type(v) .. "_" .. rawtostring(count) .. " = " .. Serialize(v, nil, nil, type(v) .. "_" .. rawtostring(count), true) .. "\n"
         end
         count = count + 1
     end
@@ -1328,187 +1097,6 @@ function v2v(t)
         ret = ret .. bottomstr
     end
     return ret
-end
-
-function tabletostring(tbl: table,format: boolean)
-    
-end
-
---- table-to-string
---- @param t table
---- @param l number
---- @param p table
---- @param n string
---- @param vtv boolean
---- @param i any
---- @param pt table
---- @param path string
---- @param tables table
---- @param tI table
-function t2s(t, l, p, n, vtv, i, pt, path, tables, tI)
-    local globalIndex = table.find(getgenv(), t) -- checks if table is a global
-    if type(globalIndex) == "string" then
-        return globalIndex
-    end
-    if not tI then
-        tI = {0}
-    end
-    if not path then -- sets path to empty string (so it doesn't have to manually provided every time)
-        path = ""
-    end
-    if not l then -- sets the level to 0 (for indentation) and tables for logging tables it already serialized
-        l = 0
-        tables = {}
-    end
-    if not p then -- p is the previous table but doesn't really matter if it's the first
-        p = t
-    end
-    for _, v in next, tables do -- checks if the current table has been serialized before
-        if n and rawequal(v, t) then
-            bottomstr = bottomstr .. "\n" .. rawtostring(n) .. rawtostring(path) .. " = " .. rawtostring(n) .. rawtostring(({v2p(v, p)})[2])
-            return "{} --[[DUPLICATE]]"
-        end
-    end
-    table.insert(tables, t) -- logs table to past tables
-    local s =  "{" -- start of serialization
-    local size = 0
-    l += indent -- set indentation level
-    for k, v in next, t do -- iterates over table
-        size = size + 1 -- changes size for max limit
-        if size > (getgenv().SimpleSpyMaxTableSize or 1000) then
-            s = s .. "\n" .. string.rep(" ", l) .. "-- MAXIMUM TABLE SIZE REACHED, CHANGE 'getgenv().SimpleSpyMaxTableSize' TO ADJUST MAXIMUM SIZE "
-            break
-        end
-        if rawequal(k, t) then -- checks if the table being iterated over is being used as an index within itself (yay, lua)
-            bottomstr ..= `\n{n}{path}[{n}{path}] = {(rawequal(v,k) and `{n}{path}` or v2s(v, l, p, n, vtv, k, t, `{path}[{n}{path}]`, tables))}`
-            --bottomstr = bottomstr .. "\n" .. rawtostring(n) .. rawtostring(path) .. "[" .. rawtostring(n) .. rawtostring(path) .. "]" .. " = " .. (rawequal(v, k) and rawtostring(n) .. rawtostring(path) or v2s(v, l, p, n, vtv, k, t, path .. "[" .. rawtostring(n) .. rawtostring(path) .. "]", tables))
-            size -= 1
-            continue
-        end
-        local currentPath = "" -- initializes the path of 'v' within 't'
-        if type(k) == "string" and k:match("^[%a_]+[%w_]*$") then -- cleanly handles table path generation (for the first half)
-            currentPath = "." .. k
-        else
-            currentPath = "[" .. v2s(k, l, p, n, vtv, k, t, path .. currentPath, tables, tI) .. "]"
-        end
-        if size % 100 == 0 then
-            scheduleWait()
-        end
-        -- actually serializes the member of the table
-        s = s .. "\n" .. string.rep(" ", l) .. "[" .. v2s(k, l, p, n, vtv, k, t, path .. currentPath, tables, tI) .. "] = " .. v2s(v, l, p, n, vtv, k, t, path .. currentPath, tables, tI) .. ","
-    end
-    if #s > 1 then -- removes the last comma because it looks nicer (no way to tell if it's done 'till it's done so...)
-        s = s:sub(1, #s - 1)
-    end
-    if size > 0 then -- cleanly indents the last curly bracket
-        s = s .. "\n" .. string.rep(" ", l - indent)
-    end
-    return s .. "}"
-end
-
---- function-to-string
-function f2s(f)
-    for k, x in next, getgenv() do
-        local isgucci, gpath
-        if rawequal(x, f) then
-            isgucci, gpath = true, ""
-        elseif type(x) == "table" then
-            isgucci, gpath = v2p(f, x)
-        end
-        if isgucci and type(k) ~= "function" then
-            if type(k) == "string" and k:match("^[%a_]+[%w_]*$") then
-                return k .. gpath
-            else
-                return "getgenv()[" .. v2s(k) .. "]" .. gpath
-            end
-        end
-    end
-    
-    if configs.funcEnabled then
-        local funcname = info(f,"n")
-        
-        if funcname and funcname:match("^[%a_]+[%w_]*$") then
-            return `function {funcname}() end -- Function Called: {funcname}`
-        end
-    end
-    return tostring(f)
-end
-
---- instance-to-path
---- @param i userdata
-function i2p(i,customgen)
-    if customgen then
-        return customgen
-    end
-    local player = getplayer(i)
-    local parent = i
-    local out = ""
-    if parent == nil then
-        return "nil"
-    elseif player then
-        while true do
-            if parent and parent == player.Character then
-                if player == Players.LocalPlayer then
-                    return 'game:GetService("Players").LocalPlayer.Character' .. out
-                else
-                    return i2p(player) .. ".Character" .. out
-                end
-            else
-                if parent.Name:match("[%a_]+[%w+]*") ~= parent.Name then
-                    out = ':FindFirstChild(' .. formatstr(parent.Name) .. ')' .. out
-                else
-                    out = "." .. parent.Name .. out
-                end
-            end
-            task.wait()
-            parent = parent.Parent
-        end
-    elseif parent ~= game then
-        while true do
-            if parent and parent.Parent == game then
-                if SafeGetService(parent.ClassName) then
-                    if lower(parent.ClassName) == "workspace" then
-                        return `workspace{out}`
-                    else
-                        return 'game:GetService("' .. parent.ClassName .. '")' .. out
-                    end
-                else
-                    if parent.Name:match("[%a_]+[%w_]*") then
-                        return "game." .. parent.Name .. out
-                    else
-                        return 'game:FindFirstChild(' .. formatstr(parent.Name) .. ')' .. out
-                    end
-                end
-            elseif not parent.Parent then
-                getnilrequired = true
-                return 'getNil(' .. formatstr(parent.Name) .. ', "' .. parent.ClassName .. '")' .. out
-            elseif parent == Players.LocalPlayer then
-				out = ".LocalPlayer" .. out
-			else
-                if parent.Name:match("[%a_]+[%w_]*") ~= parent.Name then
-                    out = ':WaitForChild(' .. formatstr(parent.Name) .. ')' .. out
-                else
-                    out = ':WaitForChild("' .. parent.Name .. '")'..out
-                end
-            end
-            --[[if i:IsDescendantOf(Players.LocalPlayer) then
-                return 'game:GetService("Players").LocalPlayer'..out
-            end]]
-            parent = parent.Parent
-            task.wait()
-        end
-    else
-        return "game"
-    end
-end
-
---- Gets the player an instance is descended from
-function getplayer(instance)
-    for _, v in next, Players:GetPlayers() do
-        if v.Character and (instance:IsDescendantOf(v.Character) or instance == v.Character) then
-            return v
-        end
-    end
 end
 
 --- value-to-path (in table)
@@ -1527,7 +1115,7 @@ function v2p(x, t, path, prev)
             if type(i) == "string" and i:match("^[%a_]+[%w_]*$") then
                 return true, (path .. "." .. i)
             else
-                return true, (path .. "[" .. v2s(i) .. "]")
+                return true, (path .. "[" .. Serialize(i) .. "]")
             end
         end
         if type(v) == "table" then
@@ -1545,97 +1133,13 @@ function v2p(x, t, path, prev)
                     if type(i) == "string" and i:match("^[%a_]+[%w_]*$") then
                         return true, "." .. i .. p
                     else
-                        return true, "[" .. v2s(i) .. "]" .. p
+                        return true, "[" .. Serialize(i) .. "]" .. p
                     end
                 end
             end
         end
     end
     return false, ""
-end
-
---- format s: string, byte encrypt (for weird symbols)
-function formatstr(s, indentation)
-    if not indentation then
-        indentation = 0
-    end
-    local handled, reachedMax = handlespecials(s, indentation)
-    return '"' .. handled .. '"' .. (reachedMax and " --[[ MAXIMUM STRING SIZE REACHED, CHANGE 'getgenv().SimpleSpyMaxStringSize' TO ADJUST MAXIMUM SIZE ]]" or "")
-end
-
---- Adds \'s to the text as a replacement to whitespace chars and other things because string.format can't yayeet
-
-local function isFinished(coroutines: table)
-    for _, v in next, coroutines do
-        if status(v) == "running" then
-            return false
-        end
-    end
-    return true
-end
-
-local specialstrings = {
-    ["\n"] = function(thread,index)
-        resume(thread,index,"\\n")
-    end,
-    ["\t"] = function(thread,index)
-        resume(thread,index,"\\t")
-    end,
-    ["\\"] = function(thread,index)
-        resume(thread,index,"\\\\")
-    end,
-    ['"'] = function(thread,index)
-        resume(thread,index,"\\\"")
-    end
-}
-
-function handlespecials(s, indentation)
-    local i = 0
-    local n = 1
-    local coroutines = {}
-    local coroutineFunc = function(i, r)
-        s = s:sub(0, i - 1) .. r .. s:sub(i + 1, -1)
-    end
-    local timeout = 0
-    repeat
-        i += 1
-        if timeout >= 10 then
-            task.wait()
-            timeout = 0
-        end
-        local char = s:sub(i, i)
-
-        if byte(char) then
-            timeout += 1
-            local c = create(coroutineFunc)
-            table.insert(coroutines, c)
-            local specialfunc = specialstrings[char]
-
-            if specialfunc then
-                specialfunc(c,i)
-                i += 1
-            elseif byte(char) > 126 or byte(char) < 32 then
-                resume(c, i, "\\" .. byte(char))
-                -- s = s:sub(0, i - 1) .. "\\" .. byte(char) .. s:sub(i + 1, -1)
-                i += #rawtostring(byte(char))
-            end
-            if i >= n * 100 then
-                local extra = string.format('" ..\n%s"', string.rep(" ", indentation + indent))
-                s = s:sub(0, i) .. extra .. s:sub(i + 1, -1)
-                i += #extra
-                n += 1
-            end
-        end
-    until char == "" or i > (getgenv().SimpleSpyMaxStringSize or 10000)
-    while not isFinished(coroutines) do
-        RunService.Heartbeat:Wait()
-    end
-    clear(coroutines)
-    if i > (getgenv().SimpleSpyMaxStringSize or 10000) then
-        s = string.sub(s, 0, getgenv().SimpleSpyMaxStringSize or 10000)
-        return s, true
-    end
-    return s, false
 end
 
 --- finds script from 'src' from getinfo, returns nil if not found
@@ -1864,44 +1368,27 @@ local newInvokeServer = newcclosure(function(...)
 end)
 
 local function disablehooks()
-    if synv3 then
-        unhook(getrawmetatable(game).__namecall,originalNamecall)
-        unhook(Instance.new("RemoteEvent").FireServer, originalEvent)
-        unhook(Instance.new("RemoteFunction").InvokeServer, originalFunction)
-        unhook(Instance.new("UnreliableRemoteEvent").FireServer, originalUnreliableEvent)
-        restorefunction(originalNamecall)
-        restorefunction(originalEvent)
-        restorefunction(originalFunction)
+    if hookmetamethod then
+        hookmetamethod(game,"__namecall",originalNamecall)
     else
-        if hookmetamethod then
-            hookmetamethod(game,"__namecall",originalNamecall)
-        else
-            hookfunction(getrawmetatable(game).__namecall,originalNamecall)
-        end
-        hookfunction(Instance.new("RemoteEvent").FireServer, originalEvent)
-        hookfunction(Instance.new("RemoteFunction").InvokeServer, originalFunction)
-        hookfunction(Instance.new("UnreliableRemoteEvent").FireServer, originalUnreliableEvent)
+        hookfunction(getrawmetatable(game).__namecall,originalNamecall)
     end
+    hookfunction(Instance.new("RemoteEvent").FireServer, originalEvent)
+    hookfunction(Instance.new("RemoteFunction").InvokeServer, originalFunction)
+    hookfunction(Instance.new("UnreliableRemoteEvent").FireServer, originalUnreliableEvent)
 end
 
 --- Toggles on and off the remote spy
 function toggleSpy()
     if not toggle then
-        if synv3 then
-            originalNamecall = hook(getrawmetatable(game).__namecall,clonefunction(newnamecall))
-            originalEvent = hook(Instance.new("RemoteEvent").FireServer, clonefunction(newFireServer))
-            originalFunction = hook(Instance.new("RemoteFunction").InvokeServer, clonefunction(newInvokeServer))
-            originalUnreliableEvent = hook(Instance.new("UnreliableRemoteEvent").FireServer, clonefunction(newUnreliableFireServer))
+        if hookmetamethod then
+            originalNamecall = hookmetamethod(game, "__namecall", newnamecall)
         else
-            if hookmetamethod then
-                originalNamecall = hookmetamethod(game, "__namecall", clonefunction(newnamecall))
-            else
-                originalNamecall = hookfunction(getrawmetatable(game).__namecall,clonefunction(newnamecall))
-            end
-            originalEvent = hookfunction(Instance.new("RemoteEvent").FireServer, clonefunction(newFireServer))
-            originalFunction = hookfunction(Instance.new("RemoteFunction").InvokeServer, clonefunction(newInvokeServer))
-            originalUnreliableEvent = hookfunction(Instance.new("UnreliableRemoteEvent").FireServer, clonefunction(newUnreliableFireServer))
+            originalNamecall = hookfunction(getrawmetatable(game).__namecall, newnamecall)
         end
+        originalEvent = hookfunction(Instance.new("RemoteEvent").FireServer, newFireServer)
+        originalFunction = hookfunction(Instance.new("RemoteFunction").InvokeServer, newInvokeServer)
+        originalUnreliableEvent = hookfunction(Instance.new("UnreliableRemoteEvent").FireServer, newUnreliableFireServer)
     else
         disablehooks()
     end
@@ -2064,29 +1551,6 @@ function SimpleSpy:newButton(name, description, onClick)
     return newButton(name, description, onClick)
 end
 
------ ADD ONS ----- (easily add or remove additonal functionality to the RemoteSpy!)
---[[
-    Some helpful things:
-        - add your function in here, and create buttons for them through the 'newButton' function
-        - the first argument provided is the TextButton the player clicks to run the function
-        - generated scripts are generated when the namecall is initially fired and saved in remoteFrame objects
-        - blacklisted remotes will be ignored directly in namecall (less lag)
-        - the properties of a 'remoteFrame' object:
-            {
-                Name: (string) The name of the Remote
-                GenScript: (string) The generated script that appears in the codebox (generated when namecall fired)
-                Source: (Instance (LocalScript)) The script that fired/invoked the remote
-                Remote: (Instance (RemoteEvent) | Instance (RemoteFunction)) The remote that was fired/invoked
-                Log: (Instance (TextButton)) The button being used for the remote (same as 'selected.Log')
-            }
-        - globals list: (contact @exx#9394 for more information or if you have suggestions for more to be added)
-            - closed: (boolean) whether or not the GUI is currently minimized
-            - logs: (table[remoteFrame]) full of remoteFrame objects (properties listed above)
-            - selected: (remoteFrame) the currently selected remoteFrame (properties listed above)
-            - blacklist: (string[] | Instance[] (RemoteEvent) | Instance[] (RemoteFunction)) an array of blacklisted names and remotes
-            - codebox: (Instance (TextBox)) the textbox that holds all the code- cleared often
-]]
--- Copies the contents of the codebox
 newButton(
     "Copy Code",
     function() return "Click to copy code" end,
@@ -2102,7 +1566,7 @@ newButton(
     function() return "Click to copy the path of the remote" end,
     function()
         if selected and selected.Remote then
-            setclipboard(v2s(selected.Remote))
+            setclipboard(Serialize(selected.Remote))
             TextLabel.Text = "Copied!"
         end
     end
@@ -2124,7 +1588,7 @@ newButton("Run Code",
                 else
                     returnvalue = Remote[selected.method](Remote, unpack(selected.args))
                 end
-                TextLabel.Text = ("Executed successfully!\n%s"):format(v2s(returnvalue))
+                TextLabel.Text = ("Executed successfully!\n%s"):format(Serialize(returnvalue))
             end,function(err)
                 TextLabel.Text = ("Execution error!\n%s"):format(err)
             end)
@@ -2143,7 +1607,7 @@ newButton(
             if not selected.Source then
                 selected.Source = rawget(getfenv(selected.Function),"script")
             end
-            setclipboard(v2s(selected.Source))
+            setclipboard(Serialize(selected.Source))
             TextLabel.Text = "Done!"
         end
     end
@@ -2203,7 +1667,7 @@ function()
             codebox:setRaw("--[[Converting table to string please wait]]")
             selected.Function = v2v({functionInfo = info})
         end
-        codebox:setRaw("-- Calling function info\n-- Generated by the SimpleSpy V3 serializer\n\n"..selected.Function)
+        codebox:setRaw("-- Calling function info\n-- Generated by the SimpleSpy V3 Serializer\n\n"..selected.Function)
         TextLabel.Text = "Done! Function info generated by the SimpleSpy V3 Serializer."
     else
         TextLabel.Text = "Error! Selected function was not found."
@@ -2334,7 +1798,7 @@ newButton(
                     codebox:setRaw("Enable log returnvalues first")
                     return
                 end
-                codebox:setRaw("return "..LazyFix.Serialize(selected.returnvalue.data, true))
+                codebox:setRaw("return "..Serialize(selected.returnvalue.data))
             else
                 codebox:setRaw("RemoteFunction expected got "..(Remote and Remote.ClassName))
             end
