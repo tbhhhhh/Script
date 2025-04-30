@@ -13,7 +13,6 @@ local function count_table(t)
     for i, v in next, t do
         c = c + 1
     end
-
     return c
 end
 
@@ -30,7 +29,7 @@ function Serializer.StringRet(v, typ)
             return tostring(v)
         end
     end
-    if not typ == "userdata" then
+    if typ ~= "table" or typ ~= "userdata" then
         return tostring(v)
     end
     mt = (getrawmetatable or getmetatable)(v)
@@ -94,11 +93,16 @@ function Serializer.SerializeTable(Table, Padding, Cache)
     local num = count_table(Table)
     local hasEntries = num > 0
 
-    Cache = Cache or {}
-    Padding = Padding or 1
+    local Cache = Cache or {}
+    local Padding = Padding or 1
+    
+    if Cache[Table] then
+        return Serializer.StringRet(Table) .. " --[[already seen]]"
+    end
+    Cache[Table] = true
 
     local function LocalizedFormat(v, isTable, isNaN)
-        if isTable and (Cache[v][2] >= Padding) then
+        if isTable then
             return Serializer.SerializeTable(v, Padding + 1, Cache)
         elseif isNaN then
             return "0/0"
@@ -106,19 +110,14 @@ function Serializer.SerializeTable(Table, Padding, Cache)
             return Serializer.formatValue(v)
         end
     end
-    Cache[Table] = {Table, 0}
 
     for i, v in next, Table do
         local TypeIndex, TypeValue = typeof(i) == "table", typeof(v) == "table"
-        local CachedIndex, CachedValue = Cache[i], Cache[v]
         local isNaN = false
         if v ~= v then
             isNaN = true
             v = "NaN"
         end
-
-        Cache[i] = not CachedIndex and TypeIndex and {i, Padding} or CachedIndex
-        Cache[v] = not CachedValue and TypeValue and {v, Padding} or CachedValue
 
         str = ("%s%s[%s] = %s%s\n"):format(str, string.rep("    ", Padding), LocalizedFormat(i, TypeIndex), LocalizedFormat(v, TypeValue, isNaN), (count < num and "," or ""));
         count = count + 1
@@ -138,6 +137,12 @@ function Serializer.formatValue(v)
         return "\"".. Serializer.formatstr(v) .."\""
     elseif typ == "Instance" then
         return Serializer.GetInstancePath(v)
+    elseif typ == "Enums" then
+        return "Enum"
+    elseif typ == "Enum" then
+        return "Enum."..tostring(v)
+    elseif typ == "EnumItem" then
+        return "Enum."..tostring(v.EnumType).."."..v.Name
     else
         return typ..".new(" .. tostring(v) .. ")"
     end
