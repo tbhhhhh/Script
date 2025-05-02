@@ -48,7 +48,9 @@ function Serializer.formatstr(str)
     return str:gsub("\n", "\\n"):gsub("\t", "\\t"):gsub("\r", "\\r"):gsub("\"", "\\\"")
 end
 
+local serializedInstance = {}
 function Serializer.GetInstancePath(obj)
+    if serializedInstance[obj] then return serializedInstance[obj] end
     local path = ""
     while obj do
         local indexName
@@ -83,7 +85,8 @@ function Serializer.GetInstancePath(obj)
         path = indexName..path
         obj = obj.Parent
     end
-
+    serializedInstance[obj] = path
+    
     return path
 end
 
