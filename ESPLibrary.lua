@@ -12,12 +12,12 @@ local rootPart = character and character:FindFirstChild("HumanoidRootPart")
 local Camera = workspace.CurrentCamera
 
 local function GetDistance(position)
-	if rootPart then
-	    return (rootPart.Position - position).Magnitude
-	elseif Camera then
-	    return (Camera.CFrame.Position - position).Magnitude
-	end
-	return 9e9
+    if rootPart then
+        return (rootPart.Position - position).Magnitude
+    elseif Camera then
+        return (Camera.CFrame.Position - position).Magnitude
+    end
+    return 9e9
 end
 
 local Library = {
@@ -87,9 +87,9 @@ Library.Add = function(...)
     end
     
     function ESP:ToggleVisibility(Value)
-		BillboardGui.Enabled = Value
-		Highlight.Adornee = Value and object or nil
-	end
+        BillboardGui.Enabled = Value
+        Highlight.Adornee = Value and object or nil
+    end
     
     Library.ESP[ESP.Index] = ESP
     return ESP
@@ -120,9 +120,9 @@ end))
 table.insert(Library.Connections, RunService.RenderStepped:Connect(function()
     for _, ESP in pairs(Library.ESP) do
         if not ESP.Settings.Object or not ESP.Settings.Object.Parent then
-			ESP:Destroy()
-			continue
-		end
+            ESP:Destroy()
+            continue
+        end
         
         local TargetPosition = ESP.Settings.Object:GetPivot().Position
         local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(TargetPosition)
