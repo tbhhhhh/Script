@@ -97,7 +97,7 @@ end
 
 Library.Clear = function(tag)
     for _, ESP in pairs(Library.ESP) do
-        if ESP.Tag == tag then
+        if ESP.Settings.Tag == tag then
             ESP:Destroy()
         end
     end
@@ -119,12 +119,12 @@ end))
 
 table.insert(Library.Connections, RunService.RenderStepped:Connect(function()
     for _, ESP in pairs(Library.ESP) do
-        if not ESP.Object or not ESP.Object.Parent then
+        if not ESP.Settings.Object or not ESP.Settings.Object.Parent then
 			ESP:Destroy()
 			continue
 		end
         
-        local TargetPosition = ESP.Object:GetPivot().Position
+        local TargetPosition = ESP.Settings.Object:GetPivot().Position
         local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(TargetPosition)
         
         ESP:ToggleVisibility(OnScreen)
@@ -137,9 +137,9 @@ table.insert(Library.Connections, RunService.RenderStepped:Connect(function()
         end
         
         if ESP.Settings.ShowDistance then
-            ESP.TextLabel.Text = ("%s\n[%s]"):format(ESP.Name, math.floor(Distance))
+            ESP.Instances.TextLabel.Text = ("%s\n[%s]"):format(ESP.Settings.Name, math.floor(Distance))
         else
-            ESP.TextLabel.Text = ESP.Name
+            ESP.Instances.TextLabel.Text = ESP.Settings.Name
         end
     end
 end))
