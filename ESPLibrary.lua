@@ -29,21 +29,30 @@ local Library = {
 }
 
 Library.ESPFolder.Name = "ESPFolder"
-Library.Add = function(object, name, color, size, tag)
+Library.Add = function(...)
+    local espSettings
+    if typeof(...) == "table" then
+        espSettings = ...
+    else
+        local object, name, color, size, tag = ...
+        espSettings = {Object = object,Name = name,Color = color,TextSize = size,Tag = tag}
+    end
+    if espSettings.ShowDistance == nil then espSettings.ShowDistance = Library.ShowDistance end
+    if not espSettings.MaxDistance then espSettings.MaxDistance = Library.MaxDistance end
+    
     local ESP = {
         Index = #Library.ESP+1,
-        Object = object,
-        Name = name,
-        Tag = tag
+        Settings = espSettings,
+        Instances = {}
     }
     
     local BillboardGui = Instance.new("BillboardGui", Library.ESPFolder)
-    BillboardGui.Name = tag
+    BillboardGui.Name = ESP.Settings.Tag
     BillboardGui.Enabled = true
     BillboardGui.ResetOnSpawn = false
     BillboardGui.AlwaysOnTop = true
     BillboardGui.Size = UDim2.new(0, 200, 0, 50)
-    BillboardGui.Adornee = object
+    BillboardGui.Adornee = ESP.Settings.Object
     BillboardGui.StudsOffset = Vector3.new(0, 0, 0)
     
     local TextLabel = Instance.new("TextLabel", BillboardGui)
@@ -53,24 +62,24 @@ Library.Add = function(object, name, color, size, tag)
     TextLabel.RichText = true
     TextLabel.TextStrokeTransparency = 0
     TextLabel.BackgroundTransparency = 1
-    TextLabel.Text = name
-    TextLabel.TextColor3 = color
-    TextLabel.TextSize = size
+    TextLabel.Text = ESP.Settings.Name
+    TextLabel.TextColor3 = ESP.Settings.Color
+    TextLabel.TextSize = ESP.Settings.TextSize
     
     local UIStroke = Instance.new("UIStroke", TextLabel)
     UIStroke.Thickness = 1
     
     local Highlight = Instance.new("Highlight", BillboardGui)
-    Highlight.Adornee = object
-    Highlight.FillColor = color
-    Highlight.OutlineColor = color
+    Highlight.Adornee = ESP.Settings.Object
+    Highlight.FillColor = ESP.Settings.Color
+    Highlight.OutlineColor = ESP.Settings.Color
     Highlight.FillTransparency = 0.65
     Highlight.OutlineTransparency = 0
     
-    ESP.BillboardGui = BillboardGui
-    ESP.TextLabel = TextLabel
-    ESP.UIStroke = UIStroke
-    ESP.Highlight = Highlight
+    ESP.Instances.BillboardGui = BillboardGui
+    ESP.Instances.TextLabel = TextLabel
+    ESP.Instances.UIStroke = UIStroke
+    ESP.Instances.Highlight = Highlight
     
     function ESP:Destroy()
         if BillboardGui then BillboardGui:Destroy() end
@@ -122,12 +131,12 @@ table.insert(Library.Connections, RunService.RenderStepped:Connect(function()
         if not OnScreen then continue end
         
         local Distance = GetDistance(TargetPosition)
-        if Distance > Library.MaxDistance then
+        if Distance > ESP.Settings.MaxDistance then
             ESP:ToggleVisibility(false)
             continue
         end
         
-        if Library.ShowDistance then
+        if ESP.Settings.ShowDistance then
             ESP.TextLabel.Text = ("%s\n[%s]"):format(ESP.Name, math.floor(Distance))
         else
             ESP.TextLabel.Text = ESP.Name
