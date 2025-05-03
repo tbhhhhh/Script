@@ -7,10 +7,11 @@ local CoreGui = cloneref(game:GetService("CoreGui"))
 local RunService = cloneref(game:GetService("RunService"))
 
 local LP = Players.LocalPlayer
+local character = LP.Character
+local rootPart = character and character:FindFirstChild("HumanoidRootPart")
 local Camera = workspace.CurrentCamera
 
 local function GetDistance(position)
-    local rootPart = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
 	if rootPart then
 	    return (rootPart.Position - position).Magnitude
 	elseif Camera then
@@ -21,6 +22,7 @@ end
 
 local Library = {
     ESP = {},
+    Connections = {},
     ESPFolder = Instance.new("Folder", CoreGui),
     ShowDistance = true,
     MaxDistance = math.huge
@@ -83,7 +85,6 @@ Library.Add = function(object, name, color, size, tag)
     Library.ESP[ESP.Index] = ESP
     return ESP
 end
-Library.Highlight=Library.Add
 
 Library.Clear = function(tag)
     for _, ESP in pairs(Library.ESP) do
@@ -93,7 +94,21 @@ Library.Clear = function(tag)
     end
 end
 
-RunService.RenderStepped:Connect(function()
+Library.Destroy = function()
+    Library.ESPFolder:Destroy()
+    for _, v in pairs(Library.Connections) do
+        v:Disconnect()
+    end
+    table.clear(Library)
+    getgenv().ESPLibrary = nil
+end
+
+table.insert(Library.Connections, LP.CharacterAdded:Connect(function(newCharacter)
+    character = newCharacter
+    rootPart = character:WaitForChild("HumanoidRootPart")
+end))
+
+table.insert(Library.Connections, RunService.RenderStepped:Connect(function()
     for _, ESP in pairs(Library.ESP) do
         if not ESP.Object or not ESP.Object.Parent then
 			ESP:Destroy()
@@ -118,7 +133,7 @@ RunService.RenderStepped:Connect(function()
             ESP.TextLabel.Text = ESP.Name
         end
     end
-end)
+end))
 
 getgenv().ESPLibrary = Library
 return Library
