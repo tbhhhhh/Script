@@ -164,4 +164,8 @@ function Serializer.Serialize(...)
 end
 
 getgenv().serialize = Serializer.Serialize
-return Serializer
+return setmetatable(Serializer, {
+    __call = function(_, ...)
+        return serialize(...)
+    end
+})
