@@ -24,10 +24,8 @@ local bones = {
 
 --// Settings
 local ESP_SETTINGS = {
-    BoxOutlineColor = Color3.new(0, 0, 0),
     BoxColor = Color3.new(1, 1, 1),
     NameColor = Color3.new(1, 1, 1),
-    HealthOutlineColor = Color3.new(0, 0, 0),
     HealthHighColor = Color3.new(0, 1, 0),
     HealthLowColor = Color3.new(1, 0, 0),
     CharSize = Vector2.new(4, 6),
@@ -62,11 +60,6 @@ local function createEsp(player)
             Color = ESP_SETTINGS.TracerColor,
             Transparency = 0.5
         }),
-        boxOutline = create("Square", {
-            Color = ESP_SETTINGS.BoxOutlineColor,
-            Thickness = 3,
-            Filled = false
-        }),
         box = create("Square", {
             Color = ESP_SETTINGS.BoxColor,
             Thickness = 1,
@@ -77,10 +70,6 @@ local function createEsp(player)
             Outline = true,
             Center = true,
             Size = 13
-        }),
-        healthOutline = create("Line", {
-            Thickness = 3,
-            Color = ESP_SETTINGS.HealthOutlineColor
         }),
         health = create("Line", {
             Thickness = 1
@@ -158,7 +147,7 @@ local function updateEsp()
 
                     if ESP_SETTINGS.ShowName and ESP_SETTINGS.Enabled then
                         esp.name.Visible = true
-                        esp.name.Text = string.lower(player.Name)
+                        esp.name.Text = player.Name
                         esp.name.Position = Vector2.new(boxSize.X / 2 + boxPosition.X, boxPosition.Y - 16)
                         esp.name.Color = ESP_SETTINGS.NameColor
                     else
@@ -167,13 +156,10 @@ local function updateEsp()
 
                     if ESP_SETTINGS.ShowBox and ESP_SETTINGS.Enabled then
                         if ESP_SETTINGS.BoxType == "2D" then
-                            esp.boxOutline.Size = boxSize
-                            esp.boxOutline.Position = boxPosition
                             esp.box.Size = boxSize
                             esp.box.Position = boxPosition
                             esp.box.Color = ESP_SETTINGS.BoxColor
                             esp.box.Visible = true
-                            esp.boxOutline.Visible = true
                             for _, line in ipairs(esp.boxLines) do
                                 line:Remove()
                             end
@@ -226,7 +212,6 @@ local function updateEsp()
                             -- inline
                             for i = 9, 16 do
                                 boxLines[i].Thickness = 2
-                                boxLines[i].Color = ESP_SETTINGS.BoxOutlineColor
                                 boxLines[i].Transparency = 1
                             end
     
@@ -258,11 +243,9 @@ local function updateEsp()
                                 line.Visible = true
                             end
                             esp.box.Visible = false
-                            esp.boxOutline.Visible = false
                         end
                     else
                         esp.box.Visible = false
-                        esp.boxOutline.Visible = false
                         for _, line in ipairs(esp.boxLines) do
                             line:Remove()
                         end
@@ -270,16 +253,12 @@ local function updateEsp()
                     end
 
                     if ESP_SETTINGS.ShowHealth and ESP_SETTINGS.Enabled then
-                        esp.healthOutline.Visible = true
                         esp.health.Visible = true
                         local healthPercentage = player.Character.Humanoid.Health / player.Character.Humanoid.MaxHealth
-                        esp.healthOutline.From = Vector2.new(boxPosition.X - 6, boxPosition.Y + boxSize.Y)
-                        esp.healthOutline.To = Vector2.new(esp.healthOutline.From.X, esp.healthOutline.From.Y - boxSize.Y)
                         esp.health.From = Vector2.new((boxPosition.X - 5), boxPosition.Y + boxSize.Y)
                         esp.health.To = Vector2.new(esp.health.From.X, esp.health.From.Y - (player.Character.Humanoid.Health / player.Character.Humanoid.MaxHealth) * boxSize.Y)
                         esp.health.Color = ESP_SETTINGS.HealthLowColor:Lerp(ESP_SETTINGS.HealthHighColor, healthPercentage)
                     else
-                        esp.healthOutline.Visible = false
                         esp.health.Visible = false
                     end
 
