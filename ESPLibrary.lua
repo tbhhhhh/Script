@@ -88,7 +88,7 @@ Library.Add = function(...)
     
     function ESP:ToggleVisibility(Value)
         BillboardGui.Enabled = Value
-        Highlight.Adornee = Value and object or nil
+        Highlight.Adornee = Value and ESP.Settings.Object or nil
     end
     
     Library.ESP[ESP.Index] = ESP
