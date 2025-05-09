@@ -23,7 +23,7 @@ local ESP_SETTINGS = {
     ShowTracer = false,
     TracerColor = Color3.new(1, 1, 1), 
     TracerThickness = 2,
-    TracerPosition = "Bottom",
+    TracerPosition = "Top",
 }
 
 local function create(class, properties)
