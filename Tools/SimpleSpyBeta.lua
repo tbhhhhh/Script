@@ -240,7 +240,7 @@ function ErrorPrompt(Message,state)
 end
 
 local Highlight = (isfile and loadfile and isfile("Highlight.lua") and loadfile("Highlight.lua")()) or loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/SimpleSpy/main/Highlight.lua"))()
-local Serialize = loadstring(game:HttpGet("https://raw.githubusercontent.com/Xingtaiduan/Script/refs/heads/main/Tools/Serializer.lua"))().Serialize
+local Serialize = loadstring(game:HttpGet("https://raw.githubusercontent.com/Xingtaiduan/Script/refs/heads/main/Tools/Serializer.lua"))()
 
 local SimpleSpy3 = Create("ScreenGui",{Name = "SimpleSpy",ResetOnSpawn = false})
 local Storage = Create("Folder",{})
@@ -1005,6 +1005,10 @@ function newRemote(type, data)
     local ColorBar = Create("Frame",{Name = "ColorBar",Parent = RemoteTemplate,BackgroundColor3 = (type == "event" and Color3.fromRGB(255, 242, 0)) or Color3.fromRGB(99, 86, 245),BorderSizePixel = 0,Position = UDim2.new(0, 0, 0, 1),Size = UDim2.new(0, 7, 0, 18),ZIndex = 2})
     local Text = Create("TextLabel",{TextTruncate = Enum.TextTruncate.AtEnd,Name = "Text",Parent = RemoteTemplate,BackgroundColor3 = Color3.new(1, 1, 1),BackgroundTransparency = 1,Position = UDim2.new(0, 12, 0, 1),Size = UDim2.new(0, 105, 0, 18),ZIndex = 2,Font = Enum.Font.SourceSans,Text = remote.Name,TextColor3 = Color3.new(1, 1, 1),TextSize = 14,TextXAlignment = Enum.TextXAlignment.Left})
     local Button = Create("TextButton",{Name = "Button",Parent = RemoteTemplate,BackgroundColor3 = Color3.new(0, 0, 0),BackgroundTransparency = 0.75,BorderColor3 = Color3.new(1, 1, 1),Position = UDim2.new(0, 0, 0, 1),Size = UDim2.new(0, 117, 0, 18),AutoButtonColor = false,Font = Enum.Font.SourceSans,Text = "",TextColor3 = Color3.new(0, 0, 0),TextSize = 14})
+    
+    remote:GetPropertyChangedSignal("Name"):Connect(function()
+        Text.Text = remote.Name
+    end)
 
     local log = {
         Name = remote.name,
@@ -1018,6 +1022,7 @@ function newRemote(type, data)
         Button = Button,
         Blocked = data.blocked,
         Source = callingscript,
+        traceback = data.traceback,
         returnvalue = data.returnvalue,
         GenScript = "-- Generating, please wait...\n-- (If this message persists, the remote args are likely extremely long)"
     }
@@ -1079,11 +1084,11 @@ function v2v(t)
     local count = 1
     for i, v in next, t do
         if type(i) == "string" and i:match("^[%a_]+[%w_]*$") then
-            ret = ret .. "local " .. i .. " = " .. Serialize(v, nil, nil, i, true) .. "\n"
+            ret = ret .. "local " .. i .. " = " .. Serialize(v) .. "\n"
         elseif rawtostring(i):match("^[%a_]+[%w_]*$") then
             ret = ret .. "local " .. lower(rawtostring(i)) .. "_" .. rawtostring(count) .. " = " .. Serialize(v, nil, nil, lower(rawtostring(i)) .. "_" .. rawtostring(count), true) .. "\n"
         else
-            ret = ret .. "local " .. type(v) .. "_" .. rawtostring(count) .. " = " .. Serialize(v, nil, nil, type(v) .. "_" .. rawtostring(count), true) .. "\n"
+            ret = ret .. "local " .. type(v) .. "_" .. rawtostring(count) .. " = " .. Serialize(v) .. "\n"
         end
         count = count + 1
     end
@@ -1261,6 +1266,19 @@ function remoteHandler(data)
     end
 end
 
+local function GetCaller()
+    local traceback = {}
+    local level = 1
+    for i = 3, 1000 do
+        local info = debug.isvalidlevel(i) and debug.getinfo(i)
+        if not info then
+            return table.concat(traceback, "\n")
+        end
+        table.insert(traceback, ("Level:%d, Source:%s, Line:%d, FuncName:%s"):format(level, info.short_src, info.currentline, info.name and info.name ~= "" and info.name or "*Unknown*"))
+        level += 1
+    end
+end
+
 local newindex = function(method,originalfunction,...)
     if typeof(...) == 'Instance' then
         local remote = cloneref(...)
@@ -1280,6 +1298,7 @@ local newindex = function(method,originalfunction,...)
                     args = deepclone(args),
                     infofunc = infofunc,
                     callingscript = callingscript,
+                    traceback = GetCaller(),
                     metamethod = "__index",
                     blockcheck = blockcheck,
                     id = id,
@@ -1327,6 +1346,7 @@ local newnamecall = newcclosure(function(...)
                         args = deepclone(args),
                         infofunc = infofunc,
                         callingscript = callingscript,
+                        traceback = GetCaller(),
                         metamethod = "__namecall",
                         blockcheck = blockcheck,
                         id = id,
@@ -1666,6 +1686,9 @@ function()
             end
             codebox:setRaw("--[[Converting table to string please wait]]")
             selected.Function = v2v({functionInfo = info})
+            if configs.advancedinfo then
+                selected.Function ..= "\nTraceback:\n"..selected.traceback
+            end
         end
         codebox:setRaw("-- Calling function info\n-- Generated by the SimpleSpy V3 Serializer\n\n"..selected.Function)
         TextLabel.Text = "Done! Function info generated by the SimpleSpy V3 Serializer."
