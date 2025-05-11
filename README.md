@@ -1,7 +1,7 @@
 # XA Hub Beta
 ## Loader
 ```lua
-loadstring(game:HttpGet("https://pastebin.com/raw/h8nC0fLb", true))()
+loadstring(game:HttpGet("https://xingtaiduan.pythonanywhere.com/Loader"))()
 ```
 * Supported Executors
     > Arceus X,
