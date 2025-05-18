@@ -7,7 +7,7 @@ local function notify(...)
         local STX_Nofitication = Instance.new("ScreenGui")
         local STX_NofiticationUIListLayout = Instance.new("UIListLayout")
         STX_Nofitication.Name = "STX_Nofitication"
-        STX_Nofitication.Parent = game.CoreGui
+        STX_Nofitication.Parent = gethui()
         STX_Nofitication.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
         STX_Nofitication.ResetOnSpawn = false
 
