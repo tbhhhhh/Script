@@ -4282,11 +4282,11 @@ local EmbeddedModules = {
 
 				save.MouseButton1Click:Connect(function()
 					local source = codeFrame:GetText()
-					local filename = "Place_"..game.PlaceId.."_Script_"..os.time()..".txt"
+					local filename = tostring(PreviousScr)..".lua"
 
 					env.writefile(filename, source)
 					if env.movefileas then
-						env.movefileas(filename, ".txt")
+						env.movefileas(filename, ".lua")
 					end
 				end)
 
@@ -10460,8 +10460,8 @@ DefaultSettings = (function()
 		Properties = {
 			_Recurse = true,
 			MaxConflictCheck = 50,
-			ShowDeprecated = false,
-			ShowHidden = false,
+			ShowDeprecated = true,
+			ShowHidden = true,
 			ClearOnFocus = false,
 			LoadstringInput = true,
 			NumberRounding = 3,
