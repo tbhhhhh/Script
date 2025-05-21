@@ -296,8 +296,6 @@ local selected = nil
 local blacklist = {}
 --- The block list (can be a string name or the Remote Instance)
 local blocklist = {}
---- Whether or not to add getNil function
-local getNil = false
 --- Array of remotes (and original functions) connected to
 local connectedRemotes = {}
 local disabledRemotes = {}
@@ -320,7 +318,6 @@ local remotesFadeIn
 local rightFadeIn
 local codebox
 local p
-local getnilrequired = false
 
 -- autoblock variables
 local history = {}
@@ -1051,9 +1048,6 @@ function genScript(remote, args, method)
     local gen = ""
     if #args > 0 then
         gen = "local args = "..Serialize(args) .. "\n"
-        if not remote:IsDescendantOf(game) and not getnilrequired then
-            gen = "function getNil(name,class) for _,v in next, getnilinstances()do if v.ClassName==class and v.Name==name then return v;end end end\n\n" .. gen
-        end
         if method == "OnClientEvent" then
             gen ..= "firesignal("..Serialize(remote)..".OnClientEvent, unpack(args))"
         elseif method == "OnClientInvoke" then
@@ -1079,7 +1073,6 @@ end
 function v2v(t)
     topstr = ""
     bottomstr = ""
-    getnilrequired = false
     local ret = ""
     local count = 1
     for i, v in next, t do
@@ -1091,9 +1084,6 @@ function v2v(t)
             ret = ret .. "local " .. type(v) .. "_" .. rawtostring(count) .. " = " .. Serialize(v) .. "\n"
         end
         count = count + 1
-    end
-    if getnilrequired then
-        topstr = "function getNil(name,class) for _,v in next, getnilinstances() do if v.ClassName==class and v.Name==name then return v;end end end\n" .. topstr
     end
     if #topstr > 0 then
         ret = topstr .. "\n" .. ret
@@ -1266,19 +1256,6 @@ function remoteHandler(data)
     end
 end
 
-local function GetCaller()
-    local traceback = {}
-    local level = 1
-    for i = 3, 1000 do
-        local info = debug.isvalidlevel(i) and debug.getinfo(i)
-        if not info then
-            return table.concat(traceback, "\n")
-        end
-        table.insert(traceback, ("Level:%d, Source:%s, Line:%d, FuncName:%s"):format(level, info.short_src, info.currentline, info.name and info.name ~= "" and info.name or "*Unknown*"))
-        level += 1
-    end
-end
-
 local newindex = function(method,originalfunction,...)
     if typeof(...) == 'Instance' then
         local remote = cloneref(...)
@@ -1298,7 +1275,7 @@ local newindex = function(method,originalfunction,...)
                     args = deepclone(args),
                     infofunc = infofunc,
                     callingscript = callingscript,
-                    traceback = GetCaller(),
+                    traceback = debug.traceback(),
                     metamethod = "__index",
                     blockcheck = blockcheck,
                     id = id,
@@ -1346,7 +1323,7 @@ local newnamecall = newcclosure(function(...)
                         args = deepclone(args),
                         infofunc = infofunc,
                         callingscript = callingscript,
-                        traceback = GetCaller(),
+                        traceback = debug.traceback(),
                         metamethod = "__namecall",
                         blockcheck = blockcheck,
                         id = id,
@@ -1511,13 +1488,6 @@ if not getgenv().SimpleSpyExecuted then
             codebox:setRaw((suc and err) or "")
         end))
         getgenv().SimpleSpy = SimpleSpy
-        getgenv().getNil = function(name,class)
-            for _,v in next, getnilinstances() do
-                if v.ClassName == class and v.Name == name then
-                    return v;
-                end
-            end
-        end
         Background.MouseEnter:Connect(function(...)
             mouseInGui = true
             mouseEntered()
@@ -1651,7 +1621,7 @@ function()
             info = {
                 info = getinfo(func),
                 constants = lclosure and deepclone(getconstants(func)) or "N/A --Lua Closure expected got C Closure",
-                upvalues = deepclone(getupvalues(func)),
+                upvalues = lclosure and deepclone(getupvalues(func)) or "N/A --Lua Closure expected got C Closure",
                 script = {
                     SourceScript = SourceScript or 'nil',
                     CallingScript = CallingScript or 'nil'
