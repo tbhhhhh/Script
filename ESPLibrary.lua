@@ -39,6 +39,8 @@ Library.Add = function(...)
     end
     if espSettings.ShowDistance == nil then espSettings.ShowDistance = Library.ShowDistance end
     if not espSettings.MaxDistance then espSettings.MaxDistance = Library.MaxDistance end
+    if not espSettings.Color then espSettings.Color = Color3.new(1, 1, 1) end
+    if not espSettings.TextSize then espSettings.TextSize = 15 end
     
     local ESP = {
         Index = #Library.ESP+1,
@@ -56,7 +58,7 @@ Library.Add = function(...)
     BillboardGui.StudsOffset = Vector3.new(0, 0, 0)
     
     local TextLabel = Instance.new("TextLabel", BillboardGui)
-    TextLabel.Size = UDim2.new(0, 200, 0, 50)
+    TextLabel.Size = UDim2.new(1, 0, 1, 0)
     TextLabel.Font = Enum.Font.SourceSans
     TextLabel.TextWrapped = true
     TextLabel.RichText = true
@@ -137,7 +139,7 @@ table.insert(Library.Connections, RunService.RenderStepped:Connect(function()
         end
         
         if ESP.Settings.ShowDistance then
-            ESP.Instances.TextLabel.Text = ("%s\n[%s]"):format(ESP.Settings.Name, math.floor(Distance))
+            ESP.Instances.TextLabel.Text = ("%s [%s]"):format(ESP.Settings.Name, math.floor(Distance))
         else
             ESP.Instances.TextLabel.Text = ESP.Settings.Name
         end
