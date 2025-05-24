@@ -818,6 +818,7 @@ function Library.new(Library, name)
                     end
                 )
                 BoxBG.Size = UDim2.new(0, TextBox.TextBounds.X + 30, 0, 28)
+                return TextboxModule
             end
 
             function section.Slider(section, text, flag, default, min, max, precise, callback)
