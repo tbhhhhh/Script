@@ -25,76 +25,15 @@ if getgenv().Fluent then
     getgenv().Fluent:Destroy()
 end
 
-local LocaleId = game:GetService("LocalizationService").RobloxLocaleId:sub(1, 2)
-local AutoTranslation
-local last_call = 0
-local function translate(text)
-    if not text or text == "" then return text end
-    local time_elapsed = os.clock() - last_call
-    if time_elapsed <= .5 then
-        task.wait(.5 - time_elapsed)
-    end
-    local response = request({
-        Url = "https://transmart.qq.com/api/imt",
-        Method = "POST",
-        Headers = {
-            ["Content-Type"] = "application/json"
-        },
-        Body = HttpService:JSONEncode({
-            header = {
-                fn = "auto_translation",
-                client_key = "browser-chrome-110.0.0-Mac OS-df4bd4c5-a65d-44b2-a40f-42f34f3535f2-1677486696487"
-                },
-                type = "plain",
-                model_category = "normal",
-                source = {
-                    lang = "zh",
-                    text_list = {text}
-                },
-                target = {
-                    lang = LocaleId
-                }
-        })
-    })
-    last_call = os.clock()
-    if response.Success then
-        return HttpService:JSONDecode(response.Body).auto_translation[1]
-    else
-        warn("翻译失败", response.StatusMessage)
-    end
-    return text
-end
-
-if LocaleId ~= "zh" then
-    local ErrorPrompt = getrenv().require(CoreGui.RobloxGui.Modules.ErrorPrompt)
-    local prompt = ErrorPrompt.new("Default")
-    prompt._hideErrorCode = true
-    local gui = Instance.new("ScreenGui", CoreGui)
-    prompt:setErrorTitle("XA："..translate("提示"))
-    prompt:updateButtons({{
-		Text = translate("确定"),
-		Callback = function()
-		    AutoTranslation = true
-			prompt:_close()
-		end,
-	}, {
-		Text = translate("取消"),
-		Callback = function()
-		    AutoTranslation = false
-			prompt:_close()
-		end,
-	}}, 'Default')
-    prompt:setParent(gui)
-	prompt:_open(translate("检测到你的语言不是中文, 是否启用自动翻译?"))
-	repeat task.wait() until AutoTranslation ~= nil
-end
-
 local Mobile = false
 Mobile = table.find({Enum.Platform.IOS, Enum.Platform.Android}, UserInputService:GetPlatform()) ~= nil
 
 local RenderStepped = RunService.RenderStepped
 
 local ProtectGui = protectgui or (syn and syn.protect_gui) or function() end
+local gethui = gethui or function()
+    return cloneref(CoreGui)
+end
 
 local Themes = {
 	Names = {
@@ -761,8 +700,6 @@ local Library = {
 	Creator = nil,
 
 	DialogOpen = false,
-	UseAcrylic = false,
-	Acrylic = false,
 	Transparency = true,
 	MinimizeKeybind = nil,
 	MinimizeKey = Enum.KeyCode.LeftControl,
@@ -1379,12 +1316,6 @@ function Creator.New(Name, Properties, Children)
 	for Name, Value in next, Creator.DefaultProperties[Name] or {} do
 		Object[Name] = Value
 	end
-	
-	if AutoTranslation and Name == "TextLabel" and Object.Name ~= "TabDisplay" and Object.Name ~= "SliderDisplay" then
-	    Object:GetPropertyChangedSignal("Text"):Connect(function()
-	        Object.Text = translate(Object.Text)
-	    end)
-	end
 
 	-- Properties
 	for Name, Value in next, Properties or {} do
@@ -1435,7 +1366,7 @@ local New = Creator.New
 
 local GUI = New("ScreenGui", {
     Name = "XA_Fluent",
-	Parent = RunService:IsStudio() and LocalPlayer.PlayerGui or CoreGui,
+	Parent = gethui(),
 })
 Library.GUI = GUI
 ProtectGui(GUI)
@@ -1475,162 +1406,8 @@ function Library:Round(Number, Factor)
 	return Number:find("%.") and tonumber(Number:sub(1, Number:find("%.") + Factor)) or Number
 end
 
-local function map(value, inMin, inMax, outMin, outMax)
-	return (value - inMin) * (outMax - outMin) / (inMax - inMin) + outMin
-end
-
-local function viewportPointToWorld(location, distance)
-	local unitRay = workspace.CurrentCamera:ScreenPointToRay(location.X, location.Y)
-	return unitRay.Origin + unitRay.Direction * distance
-end
-
-local function getOffset()
-	local viewportSizeY = workspace.CurrentCamera.ViewportSize.Y
-	return map(viewportSizeY, 0, 2560, 8, 56)
-end
-
-local viewportPointToWorld, getOffset = unpack({ viewportPointToWorld, getOffset })
-
-local BlurFolder = Instance.new("Folder", workspace.CurrentCamera)
-
-local function createAcrylic()
-	local Part = Creator.New("Part", {
-		Name = "Body",
-		Color = Color3.new(0, 0, 0),
-		Material = Enum.Material.Glass,
-		Size = Vector3.new(1, 1, 0),
-		Anchored = true,
-		CanCollide = false,
-		Locked = true,
-		CastShadow = false,
-		Transparency = 0.98,
-	}, {
-		Creator.New("SpecialMesh", {
-			MeshType = Enum.MeshType.Brick,
-			Offset = Vector3.new(0, 0, -0.000001),
-		}),
-	})
-
-	return Part
-end
-
-function AcrylicBlur()
-	local function createAcrylicBlur(distance)
-		local cleanups = {}
-
-		distance = distance or 0.001
-		local positions = {
-			topLeft = Vector2.new(),
-			topRight = Vector2.new(),
-			bottomRight = Vector2.new(),
-		}
-		local model = createAcrylic()
-		model.Parent = BlurFolder
-
-		local function updatePositions(size, position)
-			positions.topLeft = position
-			positions.topRight = position + Vector2.new(size.X, 0)
-			positions.bottomRight = position + size
-		end
-
-		local function render()
-			local res = workspace.CurrentCamera
-			if res then
-				res = res.CFrame
-			end
-			local cond = res
-			if not cond then
-				cond = CFrame.new()
-			end
-
-			local camera = cond
-			local topLeft = positions.topLeft
-			local topRight = positions.topRight
-			local bottomRight = positions.bottomRight
-
-			local topLeft3D = viewportPointToWorld(topLeft, distance)
-			local topRight3D = viewportPointToWorld(topRight, distance)
-			local bottomRight3D = viewportPointToWorld(bottomRight, distance)
-
-			local width = (topRight3D - topLeft3D).Magnitude
-			local height = (topRight3D - bottomRight3D).Magnitude
-
-			model.CFrame =
-				CFrame.fromMatrix((topLeft3D + bottomRight3D) / 2, camera.XVector, camera.YVector, camera.ZVector)
-			model.Mesh.Scale = Vector3.new(width, height, 0)
-		end
-
-		local function onChange(rbx)
-			local offset = getOffset()
-			local size = rbx.AbsoluteSize - Vector2.new(offset, offset)
-			local position = rbx.AbsolutePosition + Vector2.new(offset / 2, offset / 2)
-
-			updatePositions(size, position)
-			task.spawn(render)
-		end
-
-		local function renderOnChange()
-			local camera = workspace.CurrentCamera
-			if not camera then
-				return
-			end
-
-			table.insert(cleanups, camera:GetPropertyChangedSignal("CFrame"):Connect(render))
-			table.insert(cleanups, camera:GetPropertyChangedSignal("ViewportSize"):Connect(render))
-			table.insert(cleanups, camera:GetPropertyChangedSignal("FieldOfView"):Connect(render))
-			task.spawn(render)
-		end
-
-		model.Destroying:Connect(function()
-			for _, item in cleanups do
-				pcall(function()
-					item:Disconnect()
-				end)
-			end
-		end)
-
-		renderOnChange()
-
-		return onChange, model
-	end
-
-	return function(distance)
-		local Blur = {}
-		local onChange, model = createAcrylicBlur(distance)
-
-		local comp = Creator.New("Frame", {
-			BackgroundTransparency = 1,
-			Size = UDim2.fromScale(1, 1),
-		})
-
-		Creator.AddSignal(comp:GetPropertyChangedSignal("AbsolutePosition"), function()
-			onChange(comp)
-		end)
-
-		Creator.AddSignal(comp:GetPropertyChangedSignal("AbsoluteSize"), function()
-			onChange(comp)
-		end)
-
-		Blur.AddParent = function(Parent)
-			Creator.AddSignal(Parent:GetPropertyChangedSignal("Visible"), function()
-				Blur.SetVisibility(Parent.Visible)
-			end)
-		end
-
-		Blur.SetVisibility = function(Value)
-			model.Transparency = Value and 0.98 or 1
-		end
-
-		Blur.Frame = comp
-		Blur.Model = model
-
-		return Blur
-	end
-end
-
 function AcrylicPaint()
 	local New = Creator.New
-	local AcrylicBlur = AcrylicBlur()
 
 	return function(props)
 		local AcrylicPaint = {}
@@ -1734,69 +1511,13 @@ function AcrylicPaint()
 			}),
 		})
 
-		local Blur
-
-		if Library.UseAcrylic then
-			Blur = AcrylicBlur()
-			Blur.Frame.Parent = AcrylicPaint.Frame
-			AcrylicPaint.Model = Blur.Model
-			AcrylicPaint.AddParent = Blur.AddParent
-			AcrylicPaint.SetVisibility = Blur.SetVisibility
-		end
-
 		return AcrylicPaint
 	end
 end
 
 local Acrylic = {
-	AcrylicBlur = AcrylicBlur(),
-	CreateAcrylic = createAcrylic,
-	AcrylicPaint = AcrylicPaint(),
+	AcrylicPaint = AcrylicPaint()
 }
-
-function Acrylic.init()
-	local baseEffect = Instance.new("DepthOfFieldEffect")
-	baseEffect.FarIntensity = 0
-	baseEffect.InFocusRadius = 0.1
-	baseEffect.NearIntensity = 1
-
-	local depthOfFieldDefaults = {}
-
-	function Acrylic.Enable()
-		for _, effect in pairs(depthOfFieldDefaults) do
-			effect.Enabled = false
-		end
-		baseEffect.Parent = Lighting
-	end
-
-	function Acrylic.Disable()
-		for _, effect in pairs(depthOfFieldDefaults) do
-			effect.Enabled = effect.enabled
-		end
-		baseEffect.Parent = nil
-	end
-
-	local function registerDefaults()
-		local function register(object)
-			if object:IsA("DepthOfFieldEffect") then
-				depthOfFieldDefaults[object] = { enabled = object.Enabled }
-			end
-		end
-
-		for _, child in pairs(Lighting:GetChildren()) do
-			register(child)
-		end
-
-		if workspace.CurrentCamera then
-			for _, child in pairs(workspace.CurrentCamera:GetChildren()) do
-				register(child)
-			end
-		end
-	end
-
-	registerDefaults()
-	Acrylic.Enable()
-end
 
 local Components = {
 	Assets = {
@@ -2037,10 +1758,6 @@ Components.Tab = (function()
 		
 		TabModule.TabCount = TabModule.TabCount + 1
 		local TabIndex = TabModule.TabCount
-		
-		if AutoTranslation then
-            Title = translate(Title)
-        end
         
 		local Tab = {
 			Selected = false,
@@ -2624,9 +2341,6 @@ Components.Notification = (function()
 						Offset = Spring(60, { frequency = 5 }),
 					})
 					task.wait(0.4)
-					if Library.UseAcrylic then
-						NewNotification.AcrylicPaint.Model:Destroy()
-					end
 					NewNotification.Holder:Destroy()
 				end)
 			end
@@ -3037,10 +2751,6 @@ Components.Window = (function()
 			Window = Window,
 		})
 
-		if Library.UseAcrylic then
-			Window.AcrylicPaint.AddParent(Window.Root)
-		end
-
 		local SizeMotor = Flipper.GroupMotor.new({
 			X = Window.Size.X.Offset,
 			Y = Window.Size.Y.Offset,
@@ -3240,9 +2950,6 @@ Components.Window = (function()
 		end
 
 		function Window:Destroy()
-			if Library.UseAcrylic then
-				Window.AcrylicPaint.Model:Destroy()
-			end
 			Window.Root:Destroy()
 		end
 
@@ -6263,7 +5970,6 @@ local InterfaceManager = {} do
 	InterfaceManager.Folder = "FluentSettings"
     InterfaceManager.Settings = {
         Theme = "Dark",
-        Acrylic = true,
         Transparency = true,
         MenuKeybind = "LeftControl"
     }
@@ -6337,19 +6043,6 @@ local InterfaceManager = {} do
 
         InterfaceTheme:SetValue(Settings.Theme)
 	
-		if Library.UseAcrylic then
-			section:AddToggle("AcrylicToggle", {
-				Title = "Acrylic",
-				Description = "The blurred background requires graphic quality 8+",
-				Default = Settings.Acrylic,
-				Callback = function(Value)
-					Library:ToggleAcrylic(Value)
-                    Settings.Acrylic = Value
-                    InterfaceManager:SaveSettings()
-				end
-			})
-		end
-	
 		section:AddToggle("TransparentToggle", {
 			Title = "透明度",
 			Description = "使界面透明",
@@ -6379,12 +6072,7 @@ function Library:CreateWindow(Config)
 	end
 
 	Library.MinimizeKey = Config.MinimizeKey or Enum.KeyCode.LeftControl
-	Library.UseAcrylic = Config.Acrylic or false
-	Library.Acrylic = Config.Acrylic or false
 	Library.Theme = Config.Theme or "Dark"
-	if Config.Acrylic then
-		Acrylic.init()
-	end
 
 	local Window = Components.Window({
 		Parent = GUI,
@@ -6410,9 +6098,6 @@ end
 function Library:Destroy()
 	if Library.Window then
 		Library.Unloaded = true
-		if Library.UseAcrylic then
-			Library.Window.AcrylicPaint.Model:Destroy()
-		end
 		Creator.Disconnect()
 		Library.GUI:Destroy()
 	end
@@ -6424,20 +6109,6 @@ end
 
 function Library:OnUnload(Callback)
     table.insert(Creator.UnloadSignals, Callback)
-end
-
-function Library:ToggleAcrylic(Value)
-	if Library.Window then
-		if Library.UseAcrylic then
-			Library.Acrylic = Value
-			Library.Window.AcrylicPaint.Model.Transparency = Value and 0.98 or 1
-			if Value then
-				Acrylic.Enable()
-			else
-				Acrylic.Disable()
-			end
-		end
-	end
 end
 
 function Library:ToggleTransparency(Value)
@@ -6455,156 +6126,22 @@ if getgenv then
 else
 	Fluent = Library
 end
+
 local MinimizeButton = New("TextButton", {
-	BackgroundTransparency = 1,
-	Size = UDim2.new(1, 0, 1, 0),
-	BorderSizePixel = 0
+    Parent = GUI,
+    Text = "Open",
+    BackgroundColor3 = Color3.fromRGB(40, 40, 40),
+	BackgroundTransparency = 0.5,
+	TextColor3 = Color3.new(1, 1, 1),
+	Size = UDim2.new(0, 50, 0, 50),
+	Position = UDim2.new(0.85, 15, 0.2, -18),
+	Active = true,
+	Draggable = true
 }, {
-	New("UIPadding", {
-		PaddingBottom = UDim.new(0, 2),
-		PaddingLeft = UDim.new(0, 2),
-		PaddingRight = UDim.new(0, 2),
-		PaddingTop = UDim.new(0, 2),
-	}),
-	New("ImageLabel", {
-		Image = Mobile and "rbxassetid://10734897102" or "",
-		Size = UDim2.new(1, 0, 1, 0),
-		BackgroundTransparency = 1
-	})
+    New("UICorner", {
+        CornerRadius = UDim.new(0, 8)
+    })
 })
-
-local Minimizer
-
-if Mobile then
-	Minimizer = New("Frame", {
-		Parent = GUI,
-		Size = UDim2.new(0.06, 0, 0.15, 0),
-		Position = UDim2.new(0.85, 0, 0.2, 0),
-		BackgroundTransparency = 1,
-		ZIndex = 5,
-	},
-	{
-		New("Frame", {
-			BackgroundColor3 = Color3.fromRGB(0, 0, 0),
-			Size = UDim2.new(1, 0, 1, 0),
-			BackgroundTransparency = 0.5,
-			BorderSizePixel = 0
-		}, {
-			New("UICorner", {
-				CornerRadius = UDim.new(0.25, 0)
-			}),
-			New("UIAspectRatioConstraint", {
-			    AspectRatio = 1,
-			    AspectType = Enum.AspectType.ScaleWithParentSize
-		    }),
-			MinimizeButton
-		})
-	})
-else
-	Minimizer = New("Frame", {
-		Parent = GUI,
-		Size = UDim2.new(0, 0, 0, 0),
-		Position = UDim2.new(0.85, 0, 0.2, 0),
-		BackgroundTransparency = 1,
-		ZIndex = 5,
-	},
-	{
-		New("Frame", {
-			BackgroundColor3 = Color3.fromRGB(0, 0, 0),
-			Size = UDim2.new(0, 0, 0, 0),
-			BackgroundTransparency = 0,
-			BorderSizePixel = 0
-		}, {
-			New("UICorner", {
-				CornerRadius = UDim.new(0.25, 0)
-			}),
-			New("UIAspectRatioConstraint", {
-			    AspectRatio = 1,
-			    AspectType = Enum.AspectType.ScaleWithParentSize
-		    }),
-			MinimizeButton
-		})
-	})
-end
-
-Creator.AddSignal(Minimizer.InputBegan, function(Input)
-	if
-		Input.UserInputType == Enum.UserInputType.MouseButton1
-		or Input.UserInputType == Enum.UserInputType.Touch
-	then
-		Dragging = true
-		MousePos = Input.Position
-		StartPos = Minimizer.Position
-
-		Input.Changed:Connect(function()
-			if Input.UserInputState == Enum.UserInputState.End then
-				Dragging = false
-			end
-		end)
-	end
-end)
-
-Creator.AddSignal(MinimizeButton.InputBegan, function(Input)
-	if
-		Input.UserInputType == Enum.UserInputType.MouseButton1
-		or Input.UserInputType == Enum.UserInputType.Touch
-	then
-		Dragging = true
-		MousePos = Input.Position
-		StartPos = Minimizer.Position
-
-		Input.Changed:Connect(function()
-			if Input.UserInputState == Enum.UserInputState.End then
-				Dragging = false
-			end
-		end)
-	end
-end)
-
-Creator.AddSignal(MinimizeButton.InputChanged, function(Input)
-	if
-		Input.UserInputType == Enum.UserInputType.MouseMovement
-		or Input.UserInputType == Enum.UserInputType.Touch
-	then
-		DragInput = Input
-	end
-end)
-Creator.AddSignal(Minimizer.InputChanged, function(Input)
-	if
-		Input.UserInputType == Enum.UserInputType.MouseMovement
-		or Input.UserInputType == Enum.UserInputType.Touch
-	then
-		DragInput = Input
-	end
-end)
-
-Creator.AddSignal(UserInputService.InputChanged, function(Input)
-	if Input == DragInput and Dragging then
-		local GuiInset = GuiService:GetGuiInset()
-		local Delta = Input.Position - MousePos
-		local ViewportSize = workspace.Camera.ViewportSize
-		local CurrentX = StartPos.X.Scale + (Delta.X/ViewportSize.X)
-		local CurrentY = StartPos.Y.Scale + (Delta.Y/ViewportSize.Y)
-
-		if CurrentX<0 or CurrentX > (ViewportSize.X - Minimizer.AbsoluteSize.X)/ViewportSize.X then
-			if CurrentX < 0 then
-				CurrentX = 0
-			else
-				CurrentX = (ViewportSize.X - Minimizer.AbsoluteSize.X)/ViewportSize.X
-			end
-		end
-
-		if CurrentY < 0 or CurrentY > ((ViewportSize.Y + GuiInset.Y) - Minimizer.AbsoluteSize.Y)/(ViewportSize.Y + GuiInset.Y) then
-			if CurrentY < 0 then
-				CurrentY = 0
-			else
-				CurrentY = ((ViewportSize.Y + GuiInset.Y) - Minimizer.AbsoluteSize.Y)/(ViewportSize.Y + GuiInset.Y)
-			end
-		end
-
-		Minimizer.Position = UDim2.fromScale(CurrentX, CurrentY)
-	end
-end)
 
 AddSignal(MinimizeButton.MouseButton1Click, function()
     if Library.Window then
