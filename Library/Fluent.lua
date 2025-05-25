@@ -32,7 +32,7 @@ local RenderStepped = RunService.RenderStepped
 
 local ProtectGui = protectgui or (syn and syn.protect_gui) or function() end
 local gethui = gethui or function()
-    return cloneref(CoreGui)
+    return CoreGui
 end
 
 local Themes = {
@@ -846,10 +846,6 @@ function Spring.new(targetValue, options)
 end
 
 function Spring:step(state, dt)
-	-- Copyright 2018 Parker Stebbins (parker@fractality.io)
-	-- github.com/Fraktality/Spring
-	-- Distributed under the MIT license
-
 	local d = self._dampingRatio
 	local f = self._frequency * 2 * math.pi
 	local g = self._targetValue
@@ -870,18 +866,6 @@ function Spring:step(state, dt)
 		local i = math.cos(f * c * dt)
 		local j = math.sin(f * c * dt)
 
-		-- Damping ratios approaching 1 can cause division by small numbers.
-		-- To fix that, group terms around z=j/c and find an approximation for z.
-		-- Start with the definition of z:
-		--    z = sin(dt*f*c)/c
-		-- Substitute a=dt*f:
-		--    z = sin(a*c)/c
-		-- Take the Maclaurin expansion of z with respect to c:
-		--    z = a - (a^3*c^2)/6 + (a^5*c^4)/120 + O(c^6)
-		--    z в‰€ a - (a^3*c^2)/6 + (a^5*c^4)/120
-		-- Rewrite in Horner form:
-		--    z в‰€ a + ((a*a)*(c*c)*(c*c)/20 - c*c)*(a*a*a)/6
-
 		local z
 		if c > EPS then
 			z = j / c
@@ -889,13 +873,6 @@ function Spring:step(state, dt)
 			local a = dt * f
 			z = a + ((a * a) * (c * c) * (c * c) / 20 - c * c) * (a * a * a) / 6
 		end
-
-		-- Frequencies approaching 0 present a similar problem.
-		-- We want an approximation for y as f approaches 0, where:
-		--    y = sin(dt*f*c)/(f*c)
-		-- Substitute b=dt*c:
-		--    y = sin(b*c)/b
-		-- Now reapply the process from z.
 
 		local y
 		if f * c > EPS then
@@ -3782,7 +3759,7 @@ ElementsTable.Slider = (function()
 			},
 		}, {
 			New("UICorner", {
-				CornerRadius = UDim.new(1, 0),
+				CornerRadius = UDim.new(0, 4),
 			}),
 		})
 
@@ -3814,7 +3791,7 @@ ElementsTable.Slider = (function()
 			},
 		}, {
 			New("UICorner", {
-				CornerRadius = UDim.new(1, 0),
+				CornerRadius = UDim.new(0, 4),
 			}),
 			New("UISizeConstraint", {
 				MaxSize = Vector2.new(150, math.huge),
@@ -6127,26 +6104,27 @@ else
 	Fluent = Library
 end
 
-local MinimizeButton = New("TextButton", {
-    Parent = GUI,
-    Text = "Open",
-    BackgroundColor3 = Color3.fromRGB(40, 40, 40),
-	BackgroundTransparency = 0.5,
-	TextColor3 = Color3.new(1, 1, 1),
-	Size = UDim2.new(0, 50, 0, 50),
-	Position = UDim2.new(0.85, 15, 0.2, -18),
-	Active = true,
-	Draggable = true
-}, {
-    New("UICorner", {
-        CornerRadius = UDim.new(0, 8)
+if Mobile then
+    local MinimizeButton = New("TextButton", {
+        Parent = GUI,
+        Text = "Open",
+        BackgroundColor3 = Color3.fromRGB(40, 40, 40),
+	    BackgroundTransparency = 0.5,
+	    TextColor3 = Color3.new(1, 1, 1),
+	    Size = UDim2.new(0, 50, 0, 50),
+	    Position = UDim2.new(0.85, 15, 0.2, -18),
+	    Active = true,
+	    Draggable = true
+    }, {
+        New("UICorner", {
+            CornerRadius = UDim.new(0, 8)
+        })
     })
-})
-
-AddSignal(MinimizeButton.MouseButton1Click, function()
-    if Library.Window then
-	    Library.Window:Minimize()
-	end
-end)
+    AddSignal(MinimizeButton.MouseButton1Click, function()
+        if Library.Window then
+	        Library.Window:Minimize()
+	    end
+    end)
+end
 
 return Library, SaveManager, InterfaceManager
