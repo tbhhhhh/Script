@@ -1,7 +1,7 @@
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local LP = Players.LocalPlayer
 local camera = workspace.CurrentCamera
-local module = require(LP.PlayerScripts.PlayerModule.ControlModule)
 
 local main = Instance.new("ScreenGui")
 local Frame = Instance.new("Frame")
@@ -19,7 +19,6 @@ local mini2 = Instance.new("TextButton")
 main.Name = "main"
 main.Parent = cloneref(game.CoreGui)
 main.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-main.ResetOnSpawn = false
 
 Frame.Parent = main
 Frame.BackgroundColor3 = Color3.fromRGB(163, 255, 137)
@@ -141,53 +140,54 @@ onof.MouseButton1Down:connect(function()
     LP.Character.Humanoid.PlatformStand = flying
     if not flying then return end
     local rootPart = LP.Character.HumanoidRootPart
-	local bv = Instance.new("BodyVelocity", rootPart)
-	bv.Velocity = Vector3.zero
-	bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
-	local bg = Instance.new("BodyGyro", rootPart)
-	bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
-    bg.P = 9e4
-	while flying do task.wait()
-	    local moveVector = module:GetMoveVector()
-		local velocity = -((camera.CFrame.LookVector * moveVector.Z) - (camera.CFrame.RightVector * moveVector.X))
-		bv.Velocity = velocity * flyspeed * 10
-	    bg.cframe = camera.CFrame
-	end
-	bg:Destroy()
-	bv:Destroy()
-	LP.Character.Humanoid.PlatformStand = false
+    local humanoid = LP.Character.Humanoid
+    while flying do
+        RunService.Heartbeat:Wait()
+        local moveDirection = camera.CFrame:VectorToObjectSpace(humanoid.MoveDirection)
+        local velocity = -((camera.CFrame.LookVector * moveDirection.Z) - (camera.CFrame.RightVector * moveDirection.X))
+        if velocity.Magnitude > 0 then
+            rootPart.Anchored = false
+            rootPart.Velocity = velocity * flyspeed * 10
+        else
+            rootPart.Velocity = Vector3.zero
+            rootPart.Anchored = true
+        end
+        --rootPart.CFrame = CFrame.lookAlong(rootPart.CFrame.Position, camera.CFrame.LookVector)
+    end
+    rootPart.Anchored = false
+    LP.Character.Humanoid.PlatformStand = false
 end)
 
 local tis
 up.MouseButton1Down:connect(function()
-	tis = up.MouseEnter:connect(function()
-		while tis do task.wait()
-			LP.Character.HumanoidRootPart.CFrame = LP.Character.HumanoidRootPart.CFrame * CFrame.new(0,1,0)
-		end
-	end)
+    tis = up.MouseEnter:connect(function()
+        while tis do task.wait()
+            LP.Character.HumanoidRootPart.CFrame = LP.Character.HumanoidRootPart.CFrame * CFrame.new(0,1,0)
+        end
+    end)
 end)
 
 up.MouseLeave:connect(function()
-	if tis then
-		tis:Disconnect()
-		tis = nil
-	end
+    if tis then
+        tis:Disconnect()
+        tis = nil
+    end
 end)
 
 local dis
 down.MouseButton1Down:connect(function()
-	dis = down.MouseEnter:connect(function()
-		while dis do task.wait()
-			LP.Character.HumanoidRootPart.CFrame = LP.Character.HumanoidRootPart.CFrame * CFrame.new(0,-1,0)
-		end
-	end)
+    dis = down.MouseEnter:connect(function()
+        while dis do task.wait()
+            LP.Character.HumanoidRootPart.CFrame = LP.Character.HumanoidRootPart.CFrame * CFrame.new(0,-1,0)
+        end
+    end)
 end)
 
 down.MouseLeave:connect(function()
-	if dis then
-		dis:Disconnect()
-		dis = nil
-	end
+    if dis then
+        dis:Disconnect()
+        dis = nil
+    end
 end)
 
 speedbox:GetPropertyChangedSignal("Text"):Connect(function()
@@ -197,40 +197,40 @@ speedbox:GetPropertyChangedSignal("Text"):Connect(function()
 end)
 
 plus.MouseButton1Down:connect(function()
-	flyspeed = flyspeed + 1
-	speedbox.Text = flyspeed
+    flyspeed = flyspeed + 1
+    speedbox.Text = flyspeed
 end)
 mine.MouseButton1Down:connect(function()
-	flyspeed = flyspeed - 1
-	speedbox.Text = flyspeed
+    flyspeed = flyspeed - 1
+    speedbox.Text = flyspeed
 end)
 
 closebutton.MouseButton1Click:Connect(function()
-	main:Destroy()
+    main:Destroy()
 end)
 
 mini.MouseButton1Click:Connect(function()
-	up.Visible = false
-	down.Visible = false
-	onof.Visible = false
-	plus.Visible = false
-	speedbox.Visible = false
-	mine.Visible = false
-	mini.Visible = false
-	mini2.Visible = true
-	main.Frame.BackgroundTransparency = 1
-	closebutton.Position =  UDim2.new(0, 0, -1, 57)
+    up.Visible = false
+    down.Visible = false
+    onof.Visible = false
+    plus.Visible = false
+    speedbox.Visible = false
+    mine.Visible = false
+    mini.Visible = false
+    mini2.Visible = true
+    main.Frame.BackgroundTransparency = 1
+    closebutton.Position =  UDim2.new(0, 0, -1, 57)
 end)
 
 mini2.MouseButton1Click:Connect(function()
-	up.Visible = true
-	down.Visible = true
-	onof.Visible = true
-	plus.Visible = true
-	speedbox.Visible = true
-	mine.Visible = true
-	mini.Visible = true
-	mini2.Visible = false
-	main.Frame.BackgroundTransparency = 0 
-	closebutton.Position =  UDim2.new(0, 0, -1, 27)
+    up.Visible = true
+    down.Visible = true
+    onof.Visible = true
+    plus.Visible = true
+    speedbox.Visible = true
+    mine.Visible = true
+    mini.Visible = true
+    mini2.Visible = false
+    main.Frame.BackgroundTransparency = 0 
+    closebutton.Position =  UDim2.new(0, 0, -1, 27)
 end)
