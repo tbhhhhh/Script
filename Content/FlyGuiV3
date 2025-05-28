@@ -152,7 +152,7 @@ onof.MouseButton1Down:connect(function()
             rootPart.Velocity = Vector3.zero
             rootPart.Anchored = true
         end
-        --rootPart.CFrame = CFrame.lookAlong(rootPart.CFrame.Position, camera.CFrame.LookVector)
+        rootPart.CFrame = CFrame.lookAlong(rootPart.CFrame.Position, camera.CFrame.LookVector)
     end
     rootPart.Anchored = false
     LP.Character.Humanoid.PlatformStand = false
