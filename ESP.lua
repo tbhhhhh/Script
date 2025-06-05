@@ -22,7 +22,7 @@ local ESP_SETTINGS = {
     ShowDistance = false,
     ShowTracer = false,
     TracerColor = Color3.new(1, 1, 1), 
-    TracerThickness = 2,
+    TracerThickness = 1,
     TracerPosition = "Top",
 }
 
@@ -244,7 +244,7 @@ local function updateEsp()
 
                     if ESP_SETTINGS.ShowDistance and ESP_SETTINGS.Enabled then
                         local distance = (camera.CFrame.p - rootPart.Position).Magnitude
-                        esp.distance.Text = string.format("%.1f studs", distance)
+                        esp.distance.Text = string.format("%.1fm", distance)
                         esp.distance.Position = Vector2.new(boxPosition.X + boxSize.X / 2, boxPosition.Y + boxSize.Y + 5)
                         esp.distance.Visible = true
                     else
