@@ -1,6 +1,6 @@
 local Bypass
 
-local isAdonis = true
+local isAdonis = false
 
 for _, v in pairs(getreg()) do
     if typeof(v) == "thread" then
