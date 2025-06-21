@@ -33,14 +33,14 @@ task.wait(2)
 
 local OldNamecall
 OldNamecall = hookmetamethod(game, "__namecall", function(...)
-    if tostring(getcallingscript()) == "CameraModule" then return OldNamecall(...) end --idk why this errors
-    local success, result = pcall(OldNamecall, ...)
+    local r = {pcall(OldNamecall, ...)}
+    local success = r[1]
     if not checkcaller() and not success then
         Bypass = "AntiHook"
         print(debug.traceback("namecall"))
         return coroutine.yield()
     end
-    return result
+    return unpack(r, 2)
 end)
 
 repeat task.wait() until Bypass
