@@ -116,11 +116,11 @@ end)
 
 game:GetService("Players").LocalPlayer.NameDisplayDistance = 0
 
-if _G.Reantheajfdfjdgs then
+if _G.UniversalESP then
     return
 end
 
-_G.Reantheajfdfjdgs = ":suifayhgvsdghfsfkajewfrhk321rk213kjrgkhj432rj34f67df"
+_G.UniversalESP = "Loaded"
 
 local players = game:GetService("Players")
 local plr = players.LocalPlayer
