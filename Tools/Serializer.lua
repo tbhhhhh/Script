@@ -1,5 +1,3 @@
-local Serializer = {}
-
 local str_types = {
     ["boolean"] = true,
     ["userdata"] = true,
@@ -16,7 +14,7 @@ local function count_table(t)
     return c
 end
 
-function Serializer.StringRet(v, typ)
+local function string_ret(v, typ)
     local ret, mt, old_func
     if typ == "number" then
         if v ~= v then
@@ -44,18 +42,27 @@ function Serializer.StringRet(v, typ)
     return ret
 end
 
-function Serializer.formatstr(str)
-    return str:gsub("\n", "\\n"):gsub("\t", "\\t"):gsub("\r", "\\r"):gsub("\"", "\\\"")
+local function formatstr(str)
+    local format = string.format
+    local char = string.char
+    local cleanTable = {}
+    for i = 0, 31 do
+        cleanTable[char(i)] = "\\" .. format("%03d", i)
+    end
+    for i = 127, 255 do
+        cleanTable[char(i)] = "\\" .. format("%03d", i)
+    end
+    return str:gsub("[\0-\31\127-\255]", cleanTable):gsub("\n", "\\n"):gsub("\t", "\\t"):gsub("\r", "\\r"):gsub("\"", "\\\"")
 end
 
-function Serializer.GetInstancePath(obj)
+local function GetInstancePath(obj)
     local path = ""
     while obj do
         local indexName
         if string.match(obj.Name,"^[%a_][%w_]*$") then
-            indexName = "." .. Serializer.formatstr(obj.Name)
+            indexName = "." .. formatstr(obj.Name)
         else
-            indexName = '["'..Serializer.formatstr(obj.Name)..'"]'
+            indexName = '["'..formatstr(obj.Name)..'"]'
         end
         if obj == game then
             path = "game"..path
@@ -86,7 +93,7 @@ function Serializer.GetInstancePath(obj)
     return path
 end
 
-function Serializer.SerializeTable(Table, Padding, Cache)
+local function SerializeTable(Table, Padding, Cache)
     local str = ""
     local count = 1
     local num = count_table(Table)
@@ -96,17 +103,17 @@ function Serializer.SerializeTable(Table, Padding, Cache)
     local Padding = Padding or 1
     
     if Cache[Table] then
-        return Serializer.StringRet(Table) .. " --[[already seen]]"
+        return string_ret(Table) .. " --[[already seen]]"
     end
     Cache[Table] = true
 
     local function LocalizedFormat(v, isTable, isNaN)
         if isTable then
-            return Serializer.SerializeTable(v, Padding + 1, Cache)
+            return SerializeTable(v, Padding + 1, Cache)
         elseif isNaN then
             return "0/0"
         else
-            return Serializer.formatValue(v)
+            return formatValue(v)
         end
     end
 
@@ -125,17 +132,17 @@ function Serializer.SerializeTable(Table, Padding, Cache)
     return ("{" .. (hasEntries and "\n" or "")) .. str .. (hasEntries and string.rep("    ", Padding - 1) or "") .. "}"
 end
 
-function Serializer.formatValue(v)
+function formatValue(v)
     local typ = typeof(v)
 
     if str_types[typ] then
-        return Serializer.StringRet(v, typ)
+        return string_ret(v, typ)
     elseif typ == "table" then
-        return Serializer.SerializeTable(v)
+        return SerializeTable(v)
     elseif typ == "string" then
-        return "\"".. Serializer.formatstr(v) .."\""
+        return "\"".. formatstr(v) .."\""
     elseif typ == "Instance" then
-        return Serializer.GetInstancePath(v)
+        return GetInstancePath(v)
     elseif typ == "Enums" then
         return "Enum"
     elseif typ == "Enum" then
@@ -147,25 +154,21 @@ function Serializer.formatValue(v)
     end
 end
 
-function Serializer.SerializeArgs(...) 
+local function serializeArgs(...) 
     local serialized = {}
     for i,v in pairs({...}) do
         local idx = #serialized + 1
-        serialized[idx] = Serializer.formatValue(v)
+        serialized[idx] = formatValue(v)
     end
     return table.concat(serialized, ", ")
 end
 
-function Serializer.Serialize(...)
+local function serialize(...)
     local args = {...}
-    if #args > 1 then return Serializer.SerializeArgs(...) end
+    if #args > 1 then return serializeArgs(...) end
     local value = args[1]
-    return Serializer.formatValue(value)
+    return formatValue(value)
 end
 
-getgenv().serialize = Serializer.Serialize
-return setmetatable(Serializer, {
-    __call = function(_, ...)
-        return serialize(...)
-    end
-})
+getgenv().serialize = serialize
+return serialize
