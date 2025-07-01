@@ -19,7 +19,7 @@ local config = {
 }
 local tologs = config.tologs
 
-local serialize = loadstring(game:HttpGet("https://raw.githubusercontent.com/Xingtaiduan/Script/refs/heads/main/Tools/Serializer.lua"))().Serialize
+local serialize = loadstring(game:HttpGet("https://raw.githubusercontent.com/Xingtaiduan/Script/refs/heads/main/Tools/Serializer.lua"))()
 local HttpService = game:GetService("HttpService")
 
 local clonef = clonefunction or function(a) return a end
@@ -99,7 +99,7 @@ oldrequest = hookfunction(request, newcclosure(function(data)
     end
     if config.BlockWebhook and match(data.Url, "webhook") then
         printf("Successfully blocked webhook url: "..data.Url.."\n\n")
-        return
+        return { Success = true, StatusCode = 200, StatusMessage = "OK", Headers = {}, Body = "" }
     end
     return oldrequest(data)
 end))
