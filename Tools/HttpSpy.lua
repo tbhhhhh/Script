@@ -93,7 +93,7 @@ oldindex = hookmetamethod(game, "__index", newcclosure(function(self, key)
 end))
 
 local oldrequest
-oldrequest = hookfunction(request, newcclosure(function(data)
+local requestfunc = newcclosure(function(data)
     if tologs.Request then
         printf("request("..serialize(data)..")\n\n")
     end
@@ -102,4 +102,14 @@ oldrequest = hookfunction(request, newcclosure(function(data)
         return { Success = true, StatusCode = 200, StatusMessage = "OK", Headers = {}, Body = "" }
     end
     return oldrequest(data)
-end))
+end)
+--oldrequest = hookfunction(request, requestfunc)
+oldrequest = request
+getgenv().request = requestfunc
+getgenv().http_request = requestfunc
+setreadonly(http, false)
+getgenv().http.request = requestfunc
+if syn and syn.request then
+    setreadonly(syn, false)
+    syn.request = requestfunc
+end
