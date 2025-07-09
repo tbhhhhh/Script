@@ -22,6 +22,7 @@ end
 
 local Library = {
     ESP = {},
+    Tags = {},
     Connections = {},
     ESPFolder = Instance.new("Folder", CoreGui),
     ShowDistance = true,
@@ -46,11 +47,14 @@ Library.Add = function(...)
         Index = #Library.ESP+1,
         Settings = espSettings,
         Instances = {}
-    }
+    }   
+    if Library.Tags[ESP.Settings.Tag] == nil then
+        Library.Tags[ESP.Settings.Tag] = true --default is enabled
+    end
     
     local BillboardGui = Instance.new("BillboardGui", Library.ESPFolder)
     BillboardGui.Name = ESP.Settings.Tag
-    BillboardGui.Enabled = true
+    BillboardGui.Enabled = false
     BillboardGui.ResetOnSpawn = false
     BillboardGui.AlwaysOnTop = true
     BillboardGui.Size = UDim2.new(0, 200, 0, 50)
@@ -72,7 +76,7 @@ Library.Add = function(...)
     UIStroke.Thickness = 1
     
     local Highlight = Instance.new("Highlight", BillboardGui)
-    Highlight.Adornee = ESP.Settings.Object
+    Highlight.Adornee = nil
     Highlight.FillColor = ESP.Settings.Color
     Highlight.OutlineColor = ESP.Settings.Color
     Highlight.FillTransparency = 0.65
@@ -92,9 +96,14 @@ Library.Add = function(...)
         BillboardGui.Enabled = Value
         Highlight.Adornee = Value and ESP.Settings.Object or nil
     end
+    ESP:ToggleVisibility(Library.Tags[ESP.Settings.Tag])
     
     Library.ESP[ESP.Index] = ESP
     return ESP
+end
+
+Library.SetEnabled = function(tag, value)
+    Library.Tags[tag] = value
 end
 
 Library.Clear = function(tag)
@@ -123,6 +132,10 @@ table.insert(Library.Connections, RunService.RenderStepped:Connect(function()
     for _, ESP in pairs(Library.ESP) do
         if not ESP.Settings.Object or not ESP.Settings.Object.Parent then
             ESP:Destroy()
+            continue
+        end
+        if not Library.Tags[ESP.Settings.Tag] then
+            ESP:ToggleVisibility(false)
             continue
         end
         
