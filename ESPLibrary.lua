@@ -20,11 +20,19 @@ local function GetDistance(position)
     return 9e9
 end
 
+local function FindPrimaryPart(instance)
+    return (instance:IsA("Model") and instance.PrimaryPart or nil)
+        or instance:FindFirstChildWhichIsA("BasePart")
+        or instance:FindFirstChildWhichIsA("UnionOperation")
+        or instance
+end
+
 local Library = {
     ESP = {},
     Tags = {},
     Connections = {},
     ESPFolder = Instance.new("Folder", CoreGui),
+    VisibleCheck = true,
     ShowDistance = true,
     MaxDistance = math.huge
 }
@@ -139,9 +147,11 @@ table.insert(Library.Connections, RunService.RenderStepped:Connect(function()
             continue
         end
         
-        local TargetPosition = ESP.Settings.Object:GetPivot().Position
+        if not ESP.Settings.ModelRoot then
+			ESP.Settings.ModelRoot = FindPrimaryPart(ESP.Settings.Object)
+		end
+        local TargetPosition = ESP.Settings.ModelRoot.Position   
         local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(TargetPosition)
-        
         ESP:ToggleVisibility(OnScreen)
         if not OnScreen then continue end
         
