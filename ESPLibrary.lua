@@ -2,6 +2,7 @@ if getgenv().ESPLibrary then
     return getgenv().ESPLibrary
 end
 
+local cloneref = cloneref or function(a) return a end
 local Players = cloneref(game:GetService("Players"))
 local CoreGui = cloneref(game:GetService("CoreGui"))
 local RunService = cloneref(game:GetService("RunService"))
@@ -32,7 +33,6 @@ local Library = {
     Tags = {},
     Connections = {},
     ESPFolder = Instance.new("Folder", CoreGui),
-    VisibleCheck = true,
     ShowDistance = true,
     MaxDistance = math.huge
 }
@@ -57,7 +57,7 @@ Library.Add = function(...)
         Instances = {}
     }   
     if Library.Tags[ESP.Settings.Tag] == nil then
-        Library.Tags[ESP.Settings.Tag] = true --default is enabled
+        Library.Tags[ESP.Settings.Tag] = true
     end
     
     local BillboardGui = Instance.new("BillboardGui", Library.ESPFolder)
@@ -162,7 +162,7 @@ table.insert(Library.Connections, RunService.RenderStepped:Connect(function()
         end
         
         if ESP.Settings.ShowDistance then
-            ESP.Instances.TextLabel.Text = ("%s [%s]"):format(ESP.Settings.Name, math.floor(Distance))
+            ESP.Instances.TextLabel.Text = ("%s\n[%s]"):format(ESP.Settings.Name, math.floor(Distance))
         else
             ESP.Instances.TextLabel.Text = ESP.Settings.Name
         end
