@@ -1213,7 +1213,6 @@ function remoteHandler(data)
     end
 
     if (data.remote:IsA("RemoteEvent") or data.remote:IsA("UnreliableRemoteEvent")) and (lower(data.method) == "fireserver" or data.method == "OnClientEvent") then
-        print("detected", data.remote.Name)
         newRemote("event", data)
     elseif data.remote:IsA("RemoteFunction") and (lower(data.method) == "invokeserver" or data.method == "OnClientInvoke") then
         newRemote("function", data)
