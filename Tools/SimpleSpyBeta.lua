@@ -7,7 +7,7 @@ if getgenv().SimpleSpyExecuted and type(getgenv().SimpleSpyShutdown) == "functio
     getgenv().SimpleSpyShutdown()
 end
 
-if identifyexecutor() == "Arceus X" then --shit
+if identifyexecutor() == "Arceus X" then
     getgenv().getcallbackvalue=nil
 end
 
@@ -29,8 +29,6 @@ configsmetatable.__index = function(self,index)
 end
 
 local lower = string.lower
-local byte = string.byte
-local round = math.round
 local running = coroutine.running
 local resume = coroutine.resume
 local status = coroutine.status
@@ -52,44 +50,29 @@ local function blankfunction(...)
     return ...
 end
 
-local get_thread_identity = (syn and syn.get_thread_identity) or getidentity or getthreadidentity
-local set_thread_identity = (syn and syn.set_thread_identity) or setidentity
-local islclosure = islclosure or is_l_closure
-local threadfuncs = (get_thread_identity and set_thread_identity and true) or false
-
 local getinfo = getinfo or blankfunction
 local getupvalues = getupvalues or debug.getupvalues or blankfunction
 local getconstants = getconstants or debug.getconstants or blankfunction
 
-local getcustomasset = getsynasset or getcustomasset
 local getcallingscript = getcallingscript or blankfunction
 local getcallbackvalue = getcallbackvalue or getcallbackmember
 local newcclosure = newcclosure or blankfunction
 local clonefunction = clonefunction or blankfunction
 local cloneref = cloneref or blankfunction
 local request = request or syn and syn.request
-local makewritable = makewriteable or function(tbl)
-    setreadonly(tbl,false)
-end
-local makereadonly = makereadonly or function(tbl)
-    setreadonly(tbl,true)
-end
+
 local isreadonly = isreadonly or table.isfrozen
 
-local setclipboard = setclipboard or toclipboard or set_clipboard or (Clipboard and Clipboard.set) or function(...)
-    return ErrorPrompt("Attempted to set clipboard: "..(...),true)
-end
-
-local hookmetamethod = hookmetamethod or (makewriteable and makereadonly and getrawmetatable) and function(obj: object, metamethod: string, func: Function)
+local hookmetamethod = hookmetamethod or (setreadonly and getrawmetatable) and function(obj: object, metamethod: string, func: Function)
     local old = getrawmetatable(obj)
 
     if hookfunction then
         return hookfunction(old[metamethod],func)
     else
         local oldmetamethod = old[metamethod]
-        makewriteable(old)
+        setreadonly(old, false)
         old[metamethod] = func
-        makereadonly(old)
+        setreadonly(old, true)
         return oldmetamethod
     end
 end
@@ -185,13 +168,13 @@ local function rawtostring(userdata)
         if cachedstring then
             local wasreadonly = isreadonly(rawmetatable)
             if wasreadonly then
-                makewritable(rawmetatable)
+                setreadonly(rawmetatable, false)
             end
             rawset(rawmetatable, "__tostring", nil)
             local safestring = tostring(userdata)
             rawset(rawmetatable, "__tostring", cachedstring)
             if wasreadonly then
-                makereadonly(rawmetatable)
+                setreadonly(rawmetatable, true)
             end
             return safestring
         end
@@ -215,32 +198,9 @@ local function jsond(str)
     return suc and err or suc
 end
 
-function ErrorPrompt(Message,state)
-    if getrenv then
-        local ErrorPrompt = getrenv().require(CoreGui:WaitForChild("RobloxGui"):WaitForChild("Modules"):WaitForChild("ErrorPrompt")) -- File can be located in your roblox folder (C:\Users\%Username%\AppData\Local\Roblox\Versions\whateverversionitis\ExtraContent\scripts\CoreScripts\Modules)
-        local prompt = ErrorPrompt.new("Default",{HideErrorCode = true})
-        local ErrorStoarge = Create("ScreenGui",{Parent = CoreGui,ResetOnSpawn = false})
-        local thread = state and running()
-        prompt:setParent(ErrorStoarge)
-        prompt:setErrorTitle("Simple Spy V3 Error")
-        prompt:updateButtons({{
-            Text = "Proceed",
-            Callback = function()
-                prompt:_close()
-                ErrorStoarge:Destroy()
-                if thread then
-                    resume(thread)
-                end
-            end,
-            Primary = true
-        }}, 'Default')
-        prompt:_open(Message)
-        if thread then
-            yield(thread)
-        end
-    else
-        warn(Message)
-    end
+function ErrorPrompt(Message)
+    local MessageBox = loadstring(game:HttpGet("https://pastebin.com/raw/6uBnwKW9"))()
+    MessageBox({Position = UDim2.new(0.5,0,0.5,0), Text = "SimpleSpy错误", Description = Message, MessageBoxIcon = "Error", MessageBoxButtons = "OK"})
 end
 
 local Highlight = (isfile and loadfile and isfile("Highlight.lua") and loadfile("Highlight.lua")()) or loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/SimpleSpy/main/Highlight.lua"))()
@@ -294,13 +254,11 @@ local sideClosed = false
 local maximized = false
 --- The event logs to be read from
 local logs = {}
---- The event currently selected.Log (defaults to nil)
+
 local selected = nil
---- The blacklist (can be a string name or the Remote Instance)
 local blacklist = {}
---- The block list (can be a string name or the Remote Instance)
 local blocklist = {}
---- Array of remotes (and original functions) connected to
+
 local connectedRemotes = {}
 local disabledRemotes = {}
 local hooks = {}
@@ -321,7 +279,7 @@ local bottomstr = ""
 local remotesFadeIn
 local rightFadeIn
 local codebox
-local p
+
 
 -- autoblock variables
 local history = {}
@@ -1099,6 +1057,7 @@ function v2v(t)
 end
 
 --- value-to-path (in table)
+local p
 function v2p(x, t, path, prev)
     if not path then
         path = ""
@@ -1254,6 +1213,7 @@ function remoteHandler(data)
     end
 
     if (data.remote:IsA("RemoteEvent") or data.remote:IsA("UnreliableRemoteEvent")) and (lower(data.method) == "fireserver" or data.method == "OnClientEvent") then
+        print("detected", data.remote.Name)
         newRemote("event", data)
     elseif data.remote:IsA("RemoteFunction") and (lower(data.method) == "invokeserver" or data.method == "OnClientInvoke") then
         newRemote("function", data)
@@ -1484,7 +1444,7 @@ if not getgenv().SimpleSpyExecuted then
         getgenv().SimpleSpyShutdown = shutdown
         onToggleButtonClick()
         if not hookmetamethod then
-            ErrorPrompt("Simple Spy V3 will not function to it's fullest capablity due to your executor not supporting hookmetamethod.",true)
+            ErrorPrompt("Simple Spy V3 will not function to it's fullest capablity due to your executor not supporting hookmetamethod.")
         end
         codebox = Highlight.new(CodeBox)
         logthread(spawn(function()
@@ -1546,7 +1506,7 @@ function SimpleSpy:newButton(name, description, onClick)
 end
 
 newButton(
-    "Copy Code",
+    "复制代码",
     function() return "Click to copy code" end,
     function()
         setclipboard(codebox:getString())
@@ -1554,9 +1514,8 @@ newButton(
     end
 )
 
---- Copies the source script (that fired the remote)
 newButton(
-    "Copy Remote",
+    "复制事件路径",
     function() return "Click to copy the path of the remote" end,
     function()
         if selected and selected.Remote then
@@ -1566,8 +1525,7 @@ newButton(
     end
 )
 
--- Executes the contents of the codebox through loadstring
-newButton("Run Code",
+newButton("运行代码",
     function() return "Click to execute code" end,
     function()
         local Remote = selected and selected.Remote
@@ -1592,9 +1550,8 @@ newButton("Run Code",
     end
 )
 
---- Gets the calling script (not super reliable but w/e)
 newButton(
-    "Get Script",
+    "复制脚本路径",
     function() return "Click to copy calling script to clipboard\nWARNING: Not super reliable, nil == could not find" end,
     function()
         if selected then
@@ -1607,8 +1564,7 @@ newButton(
     end
 )
 
---- Decompiles the script that fired the remote and puts it in the code box
-newButton("Function Info",function() return "Click to view calling function information" end,
+newButton("函数信息",function() return "Click to view calling function information" end,
 function()
     local func = selected and selected.Function
     if func then
@@ -1671,9 +1627,8 @@ function()
     end
 end)
 
---- Clears the Remote logs
 newButton(
-    "Clr Logs",
+    "清除日志",
     function() return "Click to clear logs" end,
     function()
         TextLabel.Text = "Clearing..."
@@ -1689,9 +1644,8 @@ newButton(
     end
 )
 
---- Excludes the selected.Log Remote from the RemoteSpy
 newButton(
-    "Exclude (i)",
+    "排除 (i)",
     function() return "Click to exclude this Remote.\nExcluding a remote makes SimpleSpy ignore it, but it will continue to be usable." end,
     function()
         if selected then
@@ -1701,9 +1655,8 @@ newButton(
     end
 )
 
---- Excludes all Remotes that share the same name as the selected.Log remote from the RemoteSpy
 newButton(
-    "Exclude (n)",
+    "排除 (n)",
     function() return "Click to exclude all remotes with this name.\nExcluding a remote makes SimpleSpy ignore it, but it will continue to be usable." end,
     function()
         if selected then
@@ -1713,17 +1666,15 @@ newButton(
     end
 )
 
---- clears blacklist
-newButton("Clr Blacklist",
+newButton("清除黑名单",
 function() return "Click to clear the blacklist.\nExcluding a remote makes SimpleSpy ignore it, but it will continue to be usable." end,
 function()
     blacklist = {}
     TextLabel.Text = "Blacklist cleared!"
 end)
 
---- Prevents the selected.Log Remote from firing the server (still logged)
 newButton(
-    "Block (i)",
+    "阻止 (i)",
     function() return "Click to stop this remote from firing.\nBlocking a remote won't remove it from SimpleSpy logs, but it will not continue to fire the server." end,
     function()
         if selected then
@@ -1734,8 +1685,7 @@ newButton(
     end
 )
 
---- Prevents all remotes from firing that share the same name as the selected.Log remote from the RemoteSpy (still logged)
-newButton("Block (n)",function()
+newButton("阻止 (n)",function()
     return "Click to stop remotes with this name from firing.\nBlocking a remote won't remove it from SimpleSpy logs, but it will not continue to fire the server." end,
     function()
         if selected then
@@ -1746,9 +1696,8 @@ newButton("Block (n)",function()
     end
 )
 
---- clears blacklist
 newButton(
-    "Clr Blocklist",
+    "清除阻止列表",
     function() return "Click to stop blocking remotes.\nBlocking a remote won't remove it from SimpleSpy logs, but it will not continue to fire the server." end,
     function()
         for i, v in next, disabledRemotes do
@@ -1760,8 +1709,7 @@ newButton(
     end
 )
 
---- Attempts to decompile the source script
-newButton("Decompile",
+newButton("反编译",
     function()
         return "Decompile source script"
     end,function()
@@ -1785,7 +1733,7 @@ newButton("Decompile",
 )
 
 newButton(
-    "returnvalue",
+    "获取返回值",
     function() return "Get a Remote's return data" end,
     function()
         if selected then
@@ -1804,7 +1752,7 @@ newButton(
 )
 
 newButton(
-    "Disable Info",
+    "记录函数信息",
     function() return string.format("[%s] Toggle function info (because it can cause lag in some games)", configs.funcEnabled and "ENABLED" or "DISABLED") end,
     function()
         configs.funcEnabled = not configs.funcEnabled
@@ -1813,7 +1761,7 @@ newButton(
 )
 
 newButton(
-    "Autoblock",
+    "自动阻止",
     function() return string.format("[%s] [BETA] Intelligently detects and excludes spammy remote calls from logs", configs.autoblock and "ENABLED" or "DISABLED") end,
     function()
         configs.autoblock = not configs.autoblock
@@ -1823,7 +1771,7 @@ newButton(
     end
 )
 
-newButton("Logcheckcaller",function()
+newButton("记录客户端调用",function()
     return ("[%s] Log remotes fired by the client"):format(configs.logcheckcaller and "ENABLED" or "DISABLED")
 end,
 function()
@@ -1831,7 +1779,7 @@ function()
     TextLabel.Text = ("[%s] Log remotes fired by the client"):format(configs.logcheckcaller and "ENABLED" or "DISABLED")
 end)
 
-newButton("Log returnvalues",function()
+newButton("记录返回值",function()
     return ("[BETA] [%s] Log RemoteFunction's return values"):format(configs.logreturnvalues and "ENABLED" or "DISABLED")
 end,
 function()
@@ -1839,7 +1787,7 @@ function()
     TextLabel.Text = ("[BETA] [%s] Log RemoteFunction's return values"):format(configs.logreturnvalues and "ENABLED" or "DISABLED")
 end)
 
-newButton("Advanced Info",function()
+newButton("高级信息",function()
     return ("[%s] Display more remoteinfo"):format(configs.advancedinfo and "ENABLED" or "DISABLED")
 end,
 function()
