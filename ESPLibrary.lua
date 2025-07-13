@@ -105,7 +105,7 @@ Library.Add = function(...)
         Highlight.Adornee = Value and ESP.Settings.Object or nil
     end
     ESP:ToggleVisibility(Library.Tags[ESP.Settings.Tag])
-    
+
     Library.ESP[ESP.Index] = ESP
     return ESP
 end
@@ -148,9 +148,9 @@ table.insert(Library.Connections, RunService.RenderStepped:Connect(function()
         end
         
         if not ESP.Settings.ModelRoot then
-			ESP.Settings.ModelRoot = FindPrimaryPart(ESP.Settings.Object)
-		end
-        local TargetPosition = ESP.Settings.ModelRoot.Position   
+            ESP.Settings.ModelRoot = FindPrimaryPart(ESP.Settings.Object)
+        end
+        local TargetPosition = ESP.Settings.ModelRoot:GetPivot().Position
         local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(TargetPosition)
         ESP:ToggleVisibility(OnScreen)
         if not OnScreen then continue end
