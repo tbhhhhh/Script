@@ -1381,7 +1381,7 @@ end
 connections["DescendantAdded"] = game.DescendantAdded:Connect(receiveRemote)
 for _, v in pairs({game:GetDescendants(), getnilinstances()}) do
     for _, instance in pairs(v) do
-        receiveRemote(v)
+        receiveRemote(instance)
     end
 end
 
