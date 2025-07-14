@@ -1398,7 +1398,7 @@ __newindex = hookmetamethod(game, "__newindex", newcclosure(function(self, key, 
         end
     end
     return __newindex(self, key, value)
-end)
+end))
 
 local function disableRemote()
     if selected and selected.method == "OnClientEvent" then
