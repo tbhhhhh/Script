@@ -1377,13 +1377,28 @@ local function receiveRemote(v)
         end
     end
 end
-for _, v in next, game:GetDescendants() do
-    receiveRemote(v)
-end
-for _, v in next, getnilinstances() do
-    receiveRemote(v)
-end
+
 connections["DescendantAdded"] = game.DescendantAdded:Connect(receiveRemote)
+for _, v in pairs({game:GetDescendants(), getnilinstances()}) do
+    for _, instance in pairs(v) do
+        receiveRemote(v)
+    end
+end
+
+local __newindex
+__newindex = hookmetamethod(game, "__newindex", newcclosure(function(self, key, value)
+    if not checkcaller() and self:IsA("RemoteFunction") then
+        if key == "OnClientInvoke" then
+            return __newindex(self, key, function(...)
+                if configs.loginvokeclient and toggle then
+                    return newindex("OnClientInvoke", value, self, ...)
+                end
+                return value(...)
+            end)
+        end
+    end
+    return __newindex(self, key, value)
+end)
 
 local function disableRemote()
     if selected and selected.method == "OnClientEvent" then
@@ -1422,6 +1437,7 @@ local function shutdown()
     clear(logs)
     clear(remoteLogs)
     disablehooks()
+    hookmetamethod(game, "__newindex", __newindex)
     SimpleSpy3:Destroy()
     Storage:Destroy()
     UserInputService.MouseIconEnabled = true
