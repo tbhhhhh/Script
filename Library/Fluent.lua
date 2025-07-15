@@ -6094,7 +6094,9 @@ function Library:ToggleTransparency(Value)
 	end
 end
 
-function Library:Notify(Config)
+function Library:Notify(...)
+    local args = {...}
+    local Config = typeof(...) == "table" and args[1] or {Title = args[1], Content = args[2]}
 	return NotificationModule:New(Config)
 end
 
