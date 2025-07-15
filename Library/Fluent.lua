@@ -6096,7 +6096,7 @@ end
 
 function Library:Notify(...)
     local args = {...}
-    local Config = typeof(...) == "table" and args[1] or {Title = args[1], Content = args[2]}
+    local Config = typeof(...) == "table" and args[1] or {Title = args[1], Content = args[2], Duration = args[3]}
 	return NotificationModule:New(Config)
 end
 
