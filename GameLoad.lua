@@ -15,15 +15,16 @@ local Games = {
     [65241] = "自然灾害"
 }
 
+local cloneref = cloneref or function(a) return a end
+local CoreGui = cloneref(game:GetService("CoreGui"))
+local HttpService = game:GetService("HttpService")
+
 if not ({...})[1] then
-    if Games[game.GameId] then
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/Xingtaiduan/Script/refs/heads/main/Games/"..Games[game.GameId]..".lua"))()
+    local name = Games[game.GameId]
+    if name then
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Xingtaiduan/Script/refs/heads/main/Games/"..HttpService:UrlEncode(name)..".lua"))()
     else
-        local cloneref = cloneref or function(a) return a end
-        local gethui = gethui or function()
-            return cloneref(game:GetService("CoreGui"))
-        end
-        local message = Instance.new("Message", gethui())
+        local message = Instance.new("Message", CoreGui)
         message.Text = "此游戏不受支持"
         task.wait(2)
         message:destroy()
