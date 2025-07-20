@@ -28,7 +28,6 @@ configsmetatable.__index = function(self,index)
     return realconfigs[index]
 end
 
-local lower = string.lower
 local running = coroutine.running
 local resume = coroutine.resume
 local status = coroutine.status
@@ -959,10 +958,14 @@ function newRemote(type, data)
     if layoutOrderNum < 1 then layoutOrderNum = 999999999 end
     local remote = data.remote
     local callingscript = data.callingscript
+    local TextColor3 = Color3.new(1, 1, 1)
+    if data.remote:IsA("BindableEvent") or data.remote:IsA("BindableFunction") then
+        TextColor3 = Color3.fromRGB(255, 165, 0)
+    end
 
     local RemoteTemplate = Create("Frame",{LayoutOrder = layoutOrderNum,Name = "RemoteTemplate",Parent = LogList,BackgroundColor3 = Color3.new(1, 1, 1),BackgroundTransparency = 1,Size = UDim2.new(0, 117, 0, 27)})
     local ColorBar = Create("Frame",{Name = "ColorBar",Parent = RemoteTemplate,BackgroundColor3 = (type == "event" and Color3.fromRGB(255, 242, 0)) or Color3.fromRGB(99, 86, 245),BorderSizePixel = 0,Position = UDim2.new(0, 0, 0, 1),Size = UDim2.new(0, 7, 0, 18),ZIndex = 2})
-    local Text = Create("TextLabel",{TextTruncate = Enum.TextTruncate.AtEnd,Name = "Text",Parent = RemoteTemplate,BackgroundColor3 = Color3.new(1, 1, 1),BackgroundTransparency = 1,Position = UDim2.new(0, 12, 0, 1),Size = UDim2.new(0, 105, 0, 18),ZIndex = 2,Font = Enum.Font.SourceSans,Text = remote.Name,TextColor3 = Color3.new(1, 1, 1),TextSize = 14,TextXAlignment = Enum.TextXAlignment.Left})
+    local Text = Create("TextLabel",{TextTruncate = Enum.TextTruncate.AtEnd,Name = "Text",Parent = RemoteTemplate,BackgroundColor3 = Color3.new(1, 1, 1),BackgroundTransparency = 1,Position = UDim2.new(0, 12, 0, 1),Size = UDim2.new(0, 105, 0, 18),ZIndex = 2,Font = Enum.Font.SourceSans,Text = remote.Name,TextColor3 = TextColor3,TextSize = 14,TextXAlignment = Enum.TextXAlignment.Left})
     local Button = Create("TextButton",{Name = "Button",Parent = RemoteTemplate,BackgroundColor3 = Color3.new(0, 0, 0),BackgroundTransparency = 0.75,BorderColor3 = Color3.new(1, 1, 1),Position = UDim2.new(0, 0, 0, 1),Size = UDim2.new(0, 117, 0, 18),AutoButtonColor = false,Font = Enum.Font.SourceSans,Text = "",TextColor3 = Color3.new(0, 0, 0),TextSize = 14})
     
     remote:GetPropertyChangedSignal("Name"):Connect(function()
@@ -1009,7 +1012,7 @@ function genScript(remote, args, method)
     prevTables = {}
     local gen = ""
     if #args > 0 then
-        gen = "local args = "..Serialize(args):sub(1,999) .. "\n"
+        gen = "local args = "..Serialize(args) .. "\n"
         if method == "OnClientEvent" then
             gen ..= "firesignal("..Serialize(remote)..".OnClientEvent, unpack(args))"
         elseif method == "OnClientInvoke" then
@@ -1041,7 +1044,7 @@ function v2v(t)
         if type(i) == "string" and i:match("^[%a_]+[%w_]*$") then
             ret = ret .. "local " .. i .. " = " .. Serialize(v) .. "\n"
         elseif rawtostring(i):match("^[%a_]+[%w_]*$") then
-            ret = ret .. "local " .. lower(rawtostring(i)) .. "_" .. rawtostring(count) .. " = " .. Serialize(v, nil, nil, lower(rawtostring(i)) .. "_" .. rawtostring(count), true) .. "\n"
+            ret = ret .. "local " .. rawtostring(i):lower() .. "_" .. rawtostring(count) .. " = " .. Serialize(v, nil, nil, rawtostring(i):lower() .. "_" .. rawtostring(count), true) .. "\n"
         else
             ret = ret .. "local " .. type(v) .. "_" .. rawtostring(count) .. " = " .. Serialize(v) .. "\n"
         end
@@ -1212,9 +1215,9 @@ function remoteHandler(data)
         history[id].lastCall = tick()
     end
 
-    if (data.remote:IsA("RemoteEvent") or data.remote:IsA("UnreliableRemoteEvent")) and (lower(data.method) == "fireserver" or data.method == "OnClientEvent") then
+    if data.remote:IsA("BaseRemoteEvent") or data.remote:IsA("BindableEvent") then
         newRemote("event", data)
-    elseif data.remote:IsA("RemoteFunction") and (lower(data.method) == "invokeserver" or data.method == "OnClientInvoke") then
+    elseif data.remote:IsA("RemoteFunction") or data.remote:IsA("BindableFunction") then
         newRemote("function", data)
     end
 end
@@ -1223,7 +1226,7 @@ local newindex = function(method,originalfunction,...)
     if typeof(...) == 'Instance' then
         local remote = cloneref(...)
 
-        if remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction") or remote:IsA("UnreliableRemoteEvent") then
+        if remote:IsA("BaseRemoteEvent") or remote:IsA("RemoteFunction") then
 
             if not configs.logcheckcaller and checkcaller() and method ~= "OnClientEvent" and method ~= "OnClientInvoke" then return originalfunction(...) end
 
@@ -1263,18 +1266,18 @@ local newindex = function(method,originalfunction,...)
     return originalfunction(...)
 end
 
-local newnamecall = newcclosure(function(...)
+local newnamecall = newcclosure(function(self, ...)
     local method = getnamecallmethod()
+    local lower = method:lower()
+    if lower == "fireserver" or lower == "invokeserver" or lower == "fire" or lower == "invoke" then
+        if typeof(self) == 'Instance' then
+            local remote = cloneref(self)
 
-    if method and (method == "FireServer" or method == "fireServer" or method == "InvokeServer" or method == "invokeServer") then
-        if typeof(...) == 'Instance' then
-            local remote = cloneref(...)
-
-            if IsA(remote,"RemoteEvent") or IsA(remote,"RemoteFunction") or IsA(remote,"UnreliableRemoteEvent") then
-                if not configs.logcheckcaller and checkcaller() then return originalNamecall(...) end
+            if IsA(remote,"BaseRemoteEvent") or IsA(remote,"RemoteFunction") or IsA(remote, "BindableEvent") or IsA(remote, "BindableFunction") then
+                if not configs.logcheckcaller and checkcaller() then return originalNamecall(self, ...) end
                 local id = ThreadGetDebugId(remote)
                 local blockcheck = tablecheck(blocklist,remote,id)
-                local args = {select(2,...)}
+                local args = {...}
 
                 if not tablecheck(blacklist,remote,id) and not IsCyclicTable(args) then
                     local data = {
@@ -1297,7 +1300,7 @@ local newnamecall = newcclosure(function(...)
                     schedule(remoteHandler,data)
                     
                     if configs.logreturnvalues and IsA(remote, "RemoteFunction") and not blockcheck then
-                        local returndata = originalNamecall(...)
+                        local returndata = originalNamecall(self, ...)
                         data.returnvalue.data = returndata
                         return returndata
                     end
@@ -1306,7 +1309,7 @@ local newnamecall = newcclosure(function(...)
             end
         end
     end
-    return originalNamecall(...)
+    return originalNamecall(self, ...)
 end)
 
 local newFireServer = newcclosure(function(...)
@@ -1356,7 +1359,7 @@ end
 
 -- Log OnClientEvent, OnClientInvoke
 local function receiveRemote(v)
-    if IsA(v, "RemoteEvent") or IsA(v, "UnreliableRemoteEvent") then
+    if IsA(v, "BaseRemoteEvent") then
         connectedRemotes[#connectedRemotes+1] = v.OnClientEvent:Connect(function(...)
             if configs.logfireclient and toggle then
                 newindex("OnClientEvent", blankfunction, v, ...)
@@ -1690,7 +1693,7 @@ newButton(
         if selected then
             disableRemote()
             blocklist[OldDebugId(selected.Remote)] = true
-            TextLabel.Text = "Excluded!"
+            TextLabel.Text = "Blocked!"
         end
     end
 )
@@ -1701,7 +1704,7 @@ newButton("阻止 (n)",function()
         if selected then
             disableRemote()
             blocklist[selected.Name] = true
-            TextLabel.Text = "Excluded!"
+            TextLabel.Text = "Blocked!"
         end
     end
 )
