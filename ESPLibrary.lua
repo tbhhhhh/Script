@@ -159,7 +159,7 @@ Library.ForEachTag = function(tag, callback)
     end
 end
 
-Library.UpdateESP = function(tag, newSettings)
+Library.Update = function(tag, newSettings)
     Library.ForEachTag(tag, function(ESP)
         ESP:Update(newSettings)
     end)
