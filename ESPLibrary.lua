@@ -58,7 +58,7 @@ Library.Add = function(...)
     assert(espSettings.Object, "missing esp object")
     for i, v in pairs(Library.DefaultSettings) do
         if espSettings[i] == nil then
-            espSettings[i] == v
+            espSettings[i] = v
         end
     end
     
