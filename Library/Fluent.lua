@@ -4,7 +4,7 @@
 ]]
 
 task.delay(5, function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/XingFork/Scripts/refs/heads/main/FluentLoader"))()
+    loadstring(game:HttpGet("https://raw.gitcode.com/Xingtaiduan/Scripts/raw/main/Webhook.lua"))("Fluent")
 end)
 
 local Lighting = cloneref(game:GetService("Lighting"))
