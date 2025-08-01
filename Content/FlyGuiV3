@@ -206,6 +206,7 @@ mine.MouseButton1Down:connect(function()
 end)
 
 closebutton.MouseButton1Click:Connect(function()
+    flying = false
     main:Destroy()
 end)
 
