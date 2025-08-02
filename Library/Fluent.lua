@@ -3866,7 +3866,7 @@ ElementsTable.Slider = (function()
 
 		function Slider:SetValue(Value)
 		    local OldValue = Slider.Value
-			self.Value = Library:Round(math.clamp(Value, Slider.Min, Slider.Max), Slider.Rounding)
+			self.Value = tonumber(Library:Round(math.clamp(Value, Slider.Min, Slider.Max), Slider.Rounding))
 			Slider:Display()
 
             if Slider.Value ~= OldValue then
