@@ -3099,7 +3099,7 @@ ElementsTable.Toggle = (function()
 			TweenService:Create(
 				ToggleSlider,
 				TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
-				{ BackgroundTransparency = Toggle.Value and 0.45 or 1 }
+				{ BackgroundTransparency = Toggle.Value and 0 or 1 }
 			):Play()
 			ToggleCircle.ImageTransparency = Toggle.Value and 0 or 0.5
         end
