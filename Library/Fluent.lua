@@ -1355,21 +1355,10 @@ function Library:SafeCallback(Function, ...)
 
 	local Success, Event = pcall(Function, ...)
 	if not Success then
-		local _, i = Event:find(":%d+: ")
-
-		if not i then
-			return Library:Notify({
-				Title = "界面",
-				Content = "回调函数错误",
-				SubContent = Event,
-				Duration = 5,
-			})
-		end
-
 		return Library:Notify({
 			Title = "界面",
 			Content = "回调函数错误",
-			SubContent = Event:sub(i + 1),
+			SubContent = Event,
 			Duration = 5,
 		})
 	end
