@@ -219,11 +219,8 @@ local TopBar = Create("Frame",{Parent = Background,BackgroundColor3 = Color3.fro
 local Simple = Create("TextButton",{Parent = TopBar,BackgroundColor3 = Color3.new(1, 1, 1),AutoButtonColor = false,BackgroundTransparency = 1,Position = UDim2.new(0, 5, 0, 0),Size = UDim2.new(0, 57, 0, 18),Font = Enum.Font.SourceSansBold,Text =  "SimpleSpy",TextColor3 = Color3.new(1, 1, 1),TextSize = 14,TextXAlignment = Enum.TextXAlignment.Left})
 local CloseButton = Create("TextButton",{Parent = TopBar,BackgroundColor3 = Color3.new(0.145098, 0.141176, 0.14902),BorderSizePixel = 0,Position = UDim2.new(1, -19, 0, 0),Size = UDim2.new(0, 19, 0, 19),Font = Enum.Font.SourceSans,Text = "",TextColor3 = Color3.new(0, 0, 0),TextSize = 14})
 local ImageLabel = Create("ImageLabel",{Parent = CloseButton,BackgroundColor3 = Color3.new(1, 1, 1),BackgroundTransparency = 1,Position = UDim2.new(0, 5, 0, 5),Size = UDim2.new(0, 9, 0, 9),Image = "http://www.roblox.com/asset/?id=5597086202"})
-local MaximizeButton = Create("TextButton",{Parent = TopBar,BackgroundColor3 = Color3.new(0.145098, 0.141176, 0.14902),BorderSizePixel = 0,Position = UDim2.new(1, -38, 0, 0),Size = UDim2.new(0, 19, 0, 19),Font = Enum.Font.SourceSans,Text = "",TextColor3 = Color3.new(0, 0, 0),TextSize = 14})
-local ImageLabel_2 = Create("ImageLabel",{Parent = MaximizeButton,BackgroundColor3 = Color3.new(1, 1, 1),BackgroundTransparency = 1,Position = UDim2.new(0, 5, 0, 5),Size = UDim2.new(0, 9, 0, 9),Image = "http://www.roblox.com/asset/?id=5597108117"})
-local MinimizeButton = Create("TextButton",{Parent = TopBar,BackgroundColor3 = Color3.new(0.145098, 0.141176, 0.14902),BorderSizePixel = 0,Position = UDim2.new(1, -57, 0, 0),Size = UDim2.new(0, 19, 0, 19),Font = Enum.Font.SourceSans,Text = "",TextColor3 = Color3.new(0, 0, 0),TextSize = 14})
-local ImageLabel_3 = Create("ImageLabel",{Parent = MinimizeButton,BackgroundColor3 = Color3.new(1, 1, 1),BackgroundTransparency = 1,Position = UDim2.new(0, 5, 0, 5),Size = UDim2.new(0, 9, 0, 9),Image = "http://www.roblox.com/asset/?id=5597105827"})
-
+local MinimizeButton = Create("TextButton",{Parent = TopBar,BackgroundColor3 = Color3.new(0.145098, 0.141176, 0.14902),BorderSizePixel = 0,Position = UDim2.new(1, -38, 0, 0),Size = UDim2.new(0, 19, 0, 19),Font = Enum.Font.SourceSans,Text = "",TextColor3 = Color3.new(0, 0, 0),TextSize = 14})
+local ImageLabel_1 = Create("ImageLabel",{Parent = MinimizeButton,BackgroundColor3 = Color3.new(1, 1, 1),BackgroundTransparency = 1,Position = UDim2.new(0, 5, 0, 5),Size = UDim2.new(0, 9, 0, 9),Image = "http://www.roblox.com/asset/?id=5597105827"})
 local ToolTip = Create("Frame",{Parent = SimpleSpy3,BackgroundColor3 = Color3.fromRGB(26, 26, 26),BackgroundTransparency = 0.1,BorderColor3 = Color3.new(1, 1, 1),Size = UDim2.new(0, 200, 0, 50),ZIndex = 3,Visible = false})
 local TextLabel = Create("TextLabel",{Parent = ToolTip,BackgroundColor3 = Color3.new(1, 1, 1),BackgroundTransparency = 1,Position = UDim2.new(0, 2, 0, 2),Size = UDim2.new(0, 196, 0, 46),ZIndex = 3,Font = Enum.Font.SourceSans,Text = "This is some slightly longer text.",TextColor3 = Color3.new(1, 1, 1),TextSize = 14,TextWrapped = true,TextXAlignment = Enum.TextXAlignment.Left,TextYAlignment = Enum.TextYAlignment.Top})
 
@@ -241,16 +238,8 @@ local selectedColor = Color3.new(0.321569, 0.333333, 1)
 local deselectedColor = Color3.new(0.8, 0.8, 0.8)
 --- So things are descending
 local layoutOrderNum = 999999999
---- Whether or not the gui is closing
-local mainClosing = false
 --- Whether or not the gui is closed (defaults to false)
 local closed = false
---- Whether or not the sidebar is closing
-local sideClosing = false
---- Whether or not the sidebar is closed (defaults to true but opens automatically on remote selection)
-local sideClosed = false
---- Whether or not the code box is maximized (defaults to false)
-local maximized = false
 --- The event logs to be read from
 local logs = {}
 
@@ -440,19 +429,14 @@ end
 --- Brings gui back if it gets lost offscreen (connected to the camera viewport changing)
 function bringBackOnResize()
     validateSize()
-    if sideClosed then
-        minimizeSize()
-    else
-        maximizeSize()
-    end
     local currentX = Background.AbsolutePosition.X
     local currentY = Background.AbsolutePosition.Y
     local viewportSize = workspace.CurrentCamera.ViewportSize
-    if (currentX < 0) or (currentX > (viewportSize.X - (sideClosed and 131 or Background.AbsoluteSize.X))) then
+    if (currentX < 0) or (currentX > (viewportSize.X - (closed and 131 or Background.AbsoluteSize.X))) then
         if currentX < 0 then
             currentX = 0
         else
-            currentX = viewportSize.X - (sideClosed and 131 or Background.AbsoluteSize.X)
+            currentX = viewportSize.X - (closed and 131 or Background.AbsoluteSize.X)
         end
     end
     if (currentY < 0) or (currentY > (viewportSize.Y - (closed and 19 or Background.AbsoluteSize.Y) - GuiInset.Y)) then
@@ -465,192 +449,17 @@ function bringBackOnResize()
     TweenService.Create(TweenService, Background, TweenInfo.new(0.1), {Position = UDim2.new(0, currentX, 0, currentY)}):Play()
 end
 
---- Drags gui (so long as mouse is held down)
---- @param input InputObject
-function onBarInput(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        local lastPos = UserInputService:GetMouseLocation()
-        local mainPos = Background.AbsolutePosition
-        local offset = mainPos - lastPos
-        local currentPos = offset + lastPos
-        if not connections["drag"] then
-            connections["drag"] = RunService.RenderStepped:Connect(function()
-                local newPos = UserInputService:GetMouseLocation()
-                if newPos ~= lastPos then
-                    local currentX = (offset + newPos).X
-                    local currentY = (offset + newPos).Y
-                    local viewportSize = workspace.CurrentCamera.ViewportSize
-                    if (currentX < 0 and currentX < currentPos.X) or (currentX > (viewportSize.X - (sideClosed and 131 or TopBar.AbsoluteSize.X)) and currentX > currentPos.X) then
-                        if currentX < 0 then
-                            currentX = 0
-                        else
-                            currentX = viewportSize.X - (sideClosed and 131 or TopBar.AbsoluteSize.X)
-                        end
-                    end
-                    if (currentY < 0 and currentY < currentPos.Y) or (currentY > (viewportSize.Y - (closed and 19 or Background.AbsoluteSize.Y) - GuiInset.Y) and currentY > currentPos.Y) then
-                        if currentY < 0 then
-                            currentY = 0
-                        else
-                            currentY = viewportSize.Y - (closed and 19 or Background.AbsoluteSize.Y) - GuiInset.Y
-                        end
-                    end
-                    currentPos = Vector2.new(currentX, currentY)
-                    lastPos = newPos
-                    TweenService.Create(TweenService, Background, TweenInfo.new(0.1), {Position = UDim2.new(0, currentPos.X, 0, currentPos.Y)}):Play()
-                end
-                    -- if input.UserInputState ~= Enum.UserInputState.Begin then
-                    --     RunService.UnbindFromRenderStep(RunService, "drag")
-                    -- end
-            end)
-        end
-        table.insert(connections, UserInputService.InputEnded:Connect(function(inputE)
-            if input == inputE then
-                if connections["drag"] then
-                    connections["drag"]:Disconnect()
-                    connections["drag"] = nil
-                end
-            end
-        end))
-    end
-end
-
---- Fades out the table of elements (and makes them invisible), returns a function to make them visible again
-function fadeOut(elements)
-    local data = {}
-    for _, v in next, elements do
-        if typeof(v) == "Instance" and v:IsA("GuiObject") and v.Visible then
-            spawn(function()
-                data[v] = {
-                    BackgroundTransparency = v.BackgroundTransparency
-                }
-                TweenService:Create(v, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
-                if v:IsA("TextBox") or v:IsA("TextButton") or v:IsA("TextLabel") then
-                    data[v].TextTransparency = v.TextTransparency
-                    TweenService:Create(v, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
-                elseif v:IsA("ImageButton") or v:IsA("ImageLabel") then
-                    data[v].ImageTransparency = v.ImageTransparency
-                    TweenService:Create(v, TweenInfo.new(0.5), {ImageTransparency = 1}):Play()
-                end
-                delay(0.5,function()
-                    v.Visible = false
-                    for i, x in next, data[v] do
-                        v[i] = x
-                    end
-                    data[v] = true
-                end)
-            end)
-        end
-    end
-    return function()
-        for i, _ in next, data do
-            spawn(function()
-                local properties = {
-                    BackgroundTransparency = i.BackgroundTransparency
-                }
-                i.BackgroundTransparency = 1
-                TweenService:Create(i, TweenInfo.new(0.5), {BackgroundTransparency = properties.BackgroundTransparency}):Play()
-                if i:IsA("TextBox") or i:IsA("TextButton") or i:IsA("TextLabel") then
-                    properties.TextTransparency = i.TextTransparency
-                    i.TextTransparency = 1
-                    TweenService:Create(i, TweenInfo.new(0.5), {TextTransparency = properties.TextTransparency}):Play()
-                elseif i:IsA("ImageButton") or i:IsA("ImageLabel") then
-                    properties.ImageTransparency = i.ImageTransparency
-                    i.ImageTransparency = 1
-                    TweenService:Create(i, TweenInfo.new(0.5), {ImageTransparency = properties.ImageTransparency}):Play()
-                end
-                i.Visible = true
-            end)
-        end
-    end
-end
-
 --- Expands and minimizes the gui (closed is the toggle boolean)
-function toggleMinimize(override)
-    if mainClosing and not override or maximized then
-        return
-    end
-    mainClosing = true
+function toggleMinimize()
     closed = not closed
     if closed then
-        if not sideClosed then
-            toggleSideTray(true)
-        end
-        LeftPanel.Visible = true
-        remotesFadeIn = fadeOut(LeftPanel:GetDescendants())
-        TweenService:Create(LeftPanel, TweenInfo.new(0.5), {Size = UDim2.new(0, 131, 0, 0)}):Play()
-        wait(0.5)
-    else
-        TweenService:Create(LeftPanel, TweenInfo.new(0.5), {Size = UDim2.new(0, 131, 0, 249)}):Play()
-        wait(0.5)
-        if remotesFadeIn then
-            remotesFadeIn()
-            remotesFadeIn = nil
-        end
-        bringBackOnResize()
-    end
-    mainClosing = false
-end
-
---- Expands and minimizes the sidebar (sideClosed is the toggle boolean)
-function toggleSideTray(override)
-    if sideClosing and not override or maximized then
-        return
-    end
-    sideClosing = true
-    sideClosed = not sideClosed
-    if sideClosed then
-        rightFadeIn = fadeOut(RightPanel:GetDescendants())
-        wait(0.5)
-        minimizeSize(0.5)
-        wait(0.5)
+        ImageLabel_1.Image = "http://www.roblox.com/asset/?id=5597108117"
+        LeftPanel.Visible = false
         RightPanel.Visible = false
     else
-        if closed then
-            toggleMinimize(true)
-        end
+        ImageLabel_1.Image = "http://www.roblox.com/asset/?id=5597105827"
+        LeftPanel.Visible = true
         RightPanel.Visible = true
-        maximizeSize(0.5)
-        wait(0.5)
-        if rightFadeIn then
-            rightFadeIn()
-        end
-        bringBackOnResize()
-    end
-    sideClosing = false
-end
-
---- Expands code box to fit screen for more convenient viewing
-function toggleMaximize()
-    if not sideClosed and not maximized then
-        maximized = true
-        local disable = Instance.new("TextButton")
-        local prevSize = UDim2.new(0, CodeBox.AbsoluteSize.X, 0, CodeBox.AbsoluteSize.Y)
-        local prevPos = UDim2.new(0,CodeBox.AbsolutePosition.X, 0, CodeBox.AbsolutePosition.Y)
-        disable.Size = UDim2.new(1, 0, 1, 0)
-        disable.BackgroundColor3 = Color3.new()
-        disable.BorderSizePixel = 0
-        disable.Text = 0
-        disable.ZIndex = 3
-        disable.BackgroundTransparency = 1
-        disable.AutoButtonColor = false
-        CodeBox.ZIndex = 4
-        CodeBox.Position = prevPos
-        CodeBox.Size = prevSize
-        TweenService:Create(CodeBox, TweenInfo.new(0.5), {Size = UDim2.new(0.5, 0, 0.5, 0), Position = UDim2.new(0.25, 0, 0.25, 0)}):Play()
-        TweenService:Create(disable, TweenInfo.new(0.5), {BackgroundTransparency = 0.5}):Play()
-        disable.MouseButton1Click:Connect(function()
-            if UserInputService:GetMouseLocation().Y + GuiInset.Y >= CodeBox.AbsolutePosition.Y and UserInputService:GetMouseLocation().Y + GuiInset.Y <= CodeBox.AbsolutePosition.Y + CodeBox.AbsoluteSize.Y and UserInputService:GetMouseLocation().X >= CodeBox.AbsolutePosition.X and UserInputService:GetMouseLocation().X <= CodeBox.AbsolutePosition.X + CodeBox.AbsoluteSize.X then
-                return
-            end
-            TweenService:Create(CodeBox, TweenInfo.new(0.5), {Size = prevSize, Position = prevPos}):Play()
-            TweenService:Create(disable, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
-            wait(0.5)
-            disable:Destroy()
-            CodeBox.Size = UDim2.new(1, 0, 0.5, 0)
-            CodeBox.Position = UDim2.new(0, 0, 0, 0)
-            CodeBox.ZIndex = 0
-            maximized = false
-        end)
     end
 end
 
@@ -670,14 +479,6 @@ function isInResizeRange(p)
     return false
 end
 
---- Checks if cursor is within dragging range
---- @param p Vector2
-function isInDragRange(p)
-    local relativeP = p - Background.AbsolutePosition
-    local topbarAS = TopBar.AbsoluteSize
-    return relativeP.X <= topbarAS.X - CloseButton.AbsoluteSize.X * 3 and relativeP.X >= 0 and relativeP.Y <= topbarAS.Y and relativeP.Y >= 0 or false
-end
-
 --- Called when mouse enters SimpleSpy
 local customCursor = Create("ImageLabel",{Parent = SimpleSpy3,Visible = false,Size = UDim2.fromOffset(200, 200),ZIndex = 1e9,BackgroundTransparency = 1,Image = "",Parent = SimpleSpy3})
 function mouseEntered()
@@ -694,7 +495,7 @@ function mouseEntered()
             customCursor.Position = UDim2.fromOffset(mouseLocation.X - customCursor.AbsoluteSize.X / 2, mouseLocation.Y - customCursor.AbsoluteSize.Y / 2)
             local inRange, type = isInResizeRange(mouseLocation)
             if inRange and not closed then
-                if not sideClosed then
+                if not closed then
                     customCursor.Image = type == 'B' and "rbxassetid://6065821980" or type == 'X' and "rbxassetid://6065821086" or type == 'Y' and "rbxassetid://6065821596"
                 elseif type == 'Y' or type == 'B' then
                     customCursor.Image = "rbxassetid://6065821596"
@@ -791,9 +592,9 @@ function backgroundUserInput(input)
                         currentY = 268
                     end
                     currentPos = Vector2.new(currentX, currentY)
-                    Background.Size = UDim2.fromOffset((not sideClosed and not closed and (type == "X" or type == "B")) and currentPos.X or Background.AbsoluteSize.X, (--[[(not sideClosed or currentPos.X <= LeftPanel.AbsolutePosition.X + LeftPanel.AbsoluteSize.X) and]] not closed and (type == "Y" or type == "B")) and currentPos.Y or Background.AbsoluteSize.Y)
+                    Background.Size = UDim2.fromOffset((not closed and not closed and (type == "X" or type == "B")) and currentPos.X or Background.AbsoluteSize.X, (not closed and (type == "Y" or type == "B")) and currentPos.Y or Background.AbsoluteSize.Y)
                     validateSize()
-                    if sideClosed then
+                    if closed then
                         minimizeSize()
                     else
                         maximizeSize()
@@ -810,8 +611,6 @@ function backgroundUserInput(input)
                 end
             end
         end))
-    elseif isInDragRange(mousePos) then
-        onBarInput(input)
     end
 end
 
@@ -835,9 +634,6 @@ function eventSelect(frame)
             TweenService:Create(frame.Button, TweenInfo.new(0.5), {BackgroundColor3 = Color3.fromRGB(92, 126, 229)}):Play()
         end)
         codebox:setRaw(selected.GenScript)
-    end
-    if sideClosed then
-        toggleSideTray()
     end
 end
 
@@ -1473,9 +1269,7 @@ if not getgenv().SimpleSpyExecuted then
             mouseEntered()
         end)
         TextLabel:GetPropertyChangedSignal("Text"):Connect(scaleToolTip)
-        -- TopBar.InputBegan:Connect(onBarInput)
         MinimizeButton.MouseButton1Click:Connect(toggleMinimize)
-        MaximizeButton.MouseButton1Click:Connect(toggleSideTray)
         Simple.MouseButton1Click:Connect(onToggleButtonClick)
         CloseButton.MouseEnter:Connect(onXButtonHover)
         CloseButton.MouseLeave:Connect(onXButtonUnhover)
