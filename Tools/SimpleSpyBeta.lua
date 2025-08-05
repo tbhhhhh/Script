@@ -30,17 +30,13 @@ end
 
 local running = coroutine.running
 local resume = coroutine.resume
-local status = coroutine.status
 local yield = coroutine.yield
-local create = coroutine.create
-local close = coroutine.close
 local OldDebugId = game.GetDebugId
 local info = debug.info
 
 local IsA = game.IsA
 local tostring = tostring
 local tonumber = tonumber
-local delay = task.delay
 local spawn = task.spawn
 local clear = table.clear
 local clone = table.clone
@@ -111,16 +107,6 @@ local function SafeGetService(service)
     return cloneref(game:GetService(service))
 end
 
-local function Search(logtable,tbl)
-    table.insert(logtable,tbl)
-    
-    for i,v in tbl do
-        if type(v) == "table" then
-            return table.find(logtable,v) ~= nil or Search(v)
-        end
-    end
-end
-
 local function IsCyclicTable(tbl)
     local checkedtables = {}
 
@@ -186,10 +172,9 @@ local Players = SafeGetService("Players")
 local RunService = SafeGetService("RunService")
 local UserInputService = SafeGetService("UserInputService")
 local TweenService = SafeGetService("TweenService")
-local ContentProvider = SafeGetService("ContentProvider")
 local TextService = SafeGetService("TextService")
 local http = SafeGetService("HttpService")
-local GuiInset = game:GetService("GuiService"):GetGuiInset() :: Vector2 -- pulled from rewrite
+local GuiInset = game:GetService("GuiService"):GetGuiInset()
 
 local function jsone(str) return http:JSONEncode(str) end
 local function jsond(str)
@@ -202,7 +187,7 @@ function ErrorPrompt(Message)
     MessageBox({Position = UDim2.new(0.5,0,0.5,0), Text = "SimpleSpy错误", Description = Message, MessageBoxIcon = "Error", MessageBoxButtons = "OK"})
 end
 
-local Highlight = (isfile and loadfile and isfile("Highlight.lua") and loadfile("Highlight.lua")()) or loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/SimpleSpy/main/Highlight.lua"))()
+local Highlight = loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/SimpleSpy/main/Highlight.lua"))()
 local Serialize = loadstring(game:HttpGet("https://raw.githubusercontent.com/Xingtaiduan/Script/refs/heads/main/Tools/Serializer.lua"))()
 
 local SimpleSpy3 = Create("ScreenGui",{Name = "SimpleSpy",ResetOnSpawn = false})
@@ -234,13 +219,8 @@ Instance.new("UICorner", ToggleButton)
 
 -------------------------------------------------------------------------------
 
-local selectedColor = Color3.new(0.321569, 0.333333, 1)
-local deselectedColor = Color3.new(0.8, 0.8, 0.8)
---- So things are descending
 local layoutOrderNum = 999999999
---- Whether or not the gui is closed (defaults to false)
 local closed = false
---- The event logs to be read from
 local logs = {}
 
 local selected = nil
@@ -279,7 +259,6 @@ local mouseInGui = false
 local connections = {}
 local DecompiledScripts = {}
 local generation = {}
-local running_threads = {}
 local originalNamecall = getrawmetatable(game).__namecall
 
 local remoteEvent = Instance.new("RemoteEvent",Storage)
@@ -338,10 +317,6 @@ end,function(err)
     ErrorPrompt(("An error has occured: (%s)"):format(err))
 end)
 
-local function logthread(thread: thread)
-    table.insert(running_threads,thread)
-end
-
 --- Prevents remote spam from causing lag (clears logs after `getgenv().SIMPLESPYCONFIG_MaxRemotes` or 500 remotes)
 function clean()
     local max = getgenv().SIMPLESPYCONFIG_MaxRemotes
@@ -364,10 +339,6 @@ function clean()
         end
         remoteLogs = newLogs
     end
-end
-
-local function ThreadIsNotDead(thread: thread): boolean
-    return not status(thread) == "dead"
 end
 
 --- Scales the ToolTip to fit containing text
@@ -429,6 +400,11 @@ end
 --- Brings gui back if it gets lost offscreen (connected to the camera viewport changing)
 function bringBackOnResize()
     validateSize()
+    if closed then
+        minimizeSize()
+    else
+        maximizeSize()
+    end
     local currentX = Background.AbsolutePosition.X
     local currentY = Background.AbsolutePosition.Y
     local viewportSize = workspace.CurrentCamera.ViewportSize
@@ -737,7 +713,6 @@ function newButton(name, description, onClick)
                 end
             end)
         end
-        logthread(running())
         onClick(FunctionTemplate, ...)
     end)
     updateFunctionCanvas()
@@ -787,7 +762,6 @@ function newRemote(type, data)
 
     logs[#logs + 1] = log
     local connect = Button.MouseButton1Click:Connect(function()
-        logthread(running())
         eventSelect(RemoteTemplate)
         log.GenScript = genScript(log.Remote, log.args, log.method)
         if blocked then
@@ -897,58 +871,6 @@ function v2p(x, t, path, prev)
         end
     end
     return false, ""
-end
-
---- finds script from 'src' from getinfo, returns nil if not found
---- @param src string
-function getScriptFromSrc(src)
-    local realPath
-    local runningTest
-    --- @type number
-    local s, e
-    local match = false
-    if src:sub(1, 1) == "=" then
-        realPath = game
-        s = 2
-    else
-        runningTest = src:sub(2, e and e - 1 or -1)
-        for _, v in next, getnilinstances() do
-            if v.Name == runningTest then
-                realPath = v
-                break
-            end
-        end
-        s = #runningTest + 1
-    end
-    if realPath then
-        e = src:sub(s, -1):find("%.")
-        local i = 0
-        repeat
-            i += 1
-            if not e then
-                runningTest = src:sub(s, -1)
-                local test = realPath.FindFirstChild(realPath, runningTest)
-                if test then
-                    realPath = test
-                end
-                match = true
-            else
-                runningTest = src:sub(s, e)
-                local test = realPath.FindFirstChild(realPath, runningTest)
-                local yeOld = e
-                if test then
-                    realPath = test
-                    s = e + 2
-                    e = src:sub(e + 2, -1):find("%.")
-                    e = e and e + yeOld or e
-                else
-                    e = src:sub(e + 2, -1):find("%.")
-                    e = e and e + yeOld or e
-                end
-            end
-        until match or i >= 50
-    end
-    return realPath
 end
 
 --- schedules the provided function (and calls it with any args after)
@@ -1224,14 +1146,8 @@ local function shutdown()
         connection:Disconnect()
     end
     for _, v in next, hooks do
-        task.spawn(v)
+        spawn(v)
     end
-    for i,v in next, running_threads do
-        if ThreadIsNotDead(v) then
-            close(v)
-        end
-    end
-    clear(running_threads)
     clear(connections)
     clear(logs)
     clear(remoteLogs)
@@ -1255,10 +1171,7 @@ if not getgenv().SimpleSpyExecuted then
             ErrorPrompt("Simple Spy V3 will not function to it's fullest capablity due to your executor not supporting hookmetamethod.")
         end
         codebox = Highlight.new(CodeBox)
-        logthread(spawn(function()
-            local suc,err = pcall(game.HttpGet,game,"https://raw.githubusercontent.com/78n/SimpleSpy/main/UpdateLog.lua")
-            codebox:setRaw((suc and err) or "")
-        end))
+        codebox:setRaw("SimpleSpy V3")
         getgenv().SimpleSpy = SimpleSpy
         Background.MouseEnter:Connect(function(...)
             mouseInGui = true
@@ -1279,13 +1192,13 @@ if not getgenv().SimpleSpyExecuted then
         table.insert(connections, UserInputService.InputBegan:Connect(backgroundUserInput))
         connectResize()
         SimpleSpy3.Enabled = true
-        logthread(spawn(function()
-            delay(1,onToggleButtonUnhover)
-        end))
+        spawn(function()
+            task.delay(1,onToggleButtonUnhover)
+        end)
         schedulerconnect = RunService.Heartbeat:Connect(taskscheduler)
         bringBackOnResize()
-        SimpleSpy3.Parent = (gethui and gethui()) or (syn and syn.protect_gui and syn.protect_gui(SimpleSpy3)) or CoreGui
-        logthread(spawn(function()
+        SimpleSpy3.Parent = (gethui and gethui()) or CoreGui
+        spawn(function()
             local lp = Players.LocalPlayer or Players:GetPropertyChangedSignal("LocalPlayer"):Wait() or Players.LocalPlayer
             generation = {
                 [OldDebugId(lp)] = 'game:GetService("Players").LocalPlayer',
@@ -1293,7 +1206,7 @@ if not getgenv().SimpleSpyExecuted then
                 [OldDebugId(game)] = "game",
                 [OldDebugId(workspace)] = "workspace"
             }
-        end))
+        end)
     end)
     if succeeded then
         getgenv().SimpleSpyExecuted = true
