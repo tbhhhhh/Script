@@ -58,7 +58,7 @@ local request = request or syn and syn.request
 
 local isreadonly = isreadonly or table.isfrozen
 
-local hookmetamethod = hookmetamethod or (setreadonly and getrawmetatable) and function(obj: object, metamethod: string, func: Function)
+local hookmetamethod = hookmetamethod or (setreadonly and getrawmetatable) and function(obj, metamethod, func)
     local old = getrawmetatable(obj)
 
     if hookfunction then
@@ -230,24 +230,13 @@ local blocklist = {}
 local connectedRemotes = {}
 local disabledRemotes = {}
 local hooks = {}
---- True = hookfunction, false = namecall
 local toggle = false
---- used to prevent recursives
-local prevTables = {}
---- holds logs (for deletion)
 local remoteLogs = {}
---- used for hookfunction
 getgenv().SIMPLESPYCONFIG_MaxRemotes = 300
-local indent = 4
 local scheduled = {}
 local schedulerconnect
 local SimpleSpy = {}
-local topstr = ""
-local bottomstr = ""
-local remotesFadeIn
-local rightFadeIn
 local codebox
-
 
 -- autoblock variables
 local history = {}
@@ -258,7 +247,6 @@ local mouseInGui = false
 
 local connections = {}
 local DecompiledScripts = {}
-local generation = {}
 local originalNamecall = getrawmetatable(game).__namecall
 
 local remoteEvent = Instance.new("RemoteEvent",Storage)
@@ -266,19 +254,20 @@ local unreliableRemoteEvent = Instance.new("UnreliableRemoteEvent")
 local remoteFunction = Instance.new("RemoteFunction",Storage)
 local NamecallHandler = Instance.new("BindableEvent",Storage)
 local IndexHandler = Instance.new("BindableEvent",Storage)
-local GetDebugIdHandler = Instance.new("BindableFunction",Storage) --Thanks engo for the idea of using BindableFunctions
 
 local originalEvent = remoteEvent.FireServer
 local originalUnreliableEvent = unreliableRemoteEvent.FireServer
 local originalFunction = remoteFunction.InvokeServer
+
+local GetDebugIdHandler = Instance.new("BindableFunction",Storage)
 local GetDebugIDInvoke = GetDebugIdHandler.Invoke
 
-function GetDebugIdHandler.OnInvoke(obj: Instance) -- To avoid having to set thread identity and ect
+function GetDebugIdHandler.OnInvoke(obj: Instance)
     return OldDebugId(obj)
 end
 
 local function ThreadGetDebugId(obj: Instance): string 
-    return GetDebugIDInvoke(GetDebugIdHandler,obj) -- indexing to avoid having to setnamecall later
+    return GetDebugIDInvoke(GetDebugIdHandler,obj)
 end
 
 xpcall(function()
@@ -341,36 +330,31 @@ function clean()
     end
 end
 
---- Scales the ToolTip to fit containing text
-function scaleToolTip()
+TextLabel:GetPropertyChangedSignal("Text"):Connect(function()
     local size = TextService:GetTextSize(TextLabel.Text, TextLabel.TextSize, TextLabel.Font, Vector2.new(196, math.huge))
     TextLabel.Size = UDim2.new(0, size.X, 0, size.Y)
     ToolTip.Size = UDim2.new(0, size.X + 4, 0, size.Y + 4)
-end
+end)
 
---- Executed when the toggle button (the SimpleSpy logo) is hovered over
-function onToggleButtonHover()
+Simple.MouseEnter:Connect(function()
     if not toggle then
         TweenService:Create(Simple, TweenInfo.new(0.5), {TextColor3 = Color3.fromRGB(252, 51, 51)}):Play()
     else
         TweenService:Create(Simple, TweenInfo.new(0.5), {TextColor3 = Color3.fromRGB(68, 206, 91)}):Play()
     end
-end
+end)
 
---- Executed when the toggle button is unhovered over
-function onToggleButtonUnhover()
+Simple.MouseLeave:Connect(function()
     TweenService:Create(Simple, TweenInfo.new(0.5), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
-end
+end)
 
---- Executed when the X button is hovered over
-function onXButtonHover()
+CloseButton.MouseEnter:Connect(function()
     TweenService:Create(CloseButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(255, 60, 60)}):Play()
-end
+end)
 
---- Executed when the X button is unhovered over
-function onXButtonUnhover()
+CloseButton.MouseLeave:Connect(function()
     TweenService:Create(CloseButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(37, 36, 38)}):Play()
-end
+end)
 
 --- Toggles the remote spy method (when button clicked)
 function onToggleButtonClick()
@@ -379,7 +363,7 @@ function onToggleButtonClick()
     else
         TweenService:Create(Simple, TweenInfo.new(0.5), {TextColor3 = Color3.fromRGB(68, 206, 91)}):Play()
     end
-    toggleSpyMethod()
+    toggle = not toggle
 end
 
 --- Reconnects bringBackOnResize if the current viewport changes and also connects it initially
@@ -425,8 +409,7 @@ function bringBackOnResize()
     TweenService.Create(TweenService, Background, TweenInfo.new(0.1), {Position = UDim2.new(0, currentX, 0, currentY)}):Play()
 end
 
---- Expands and minimizes the gui (closed is the toggle boolean)
-function toggleMinimize()
+MinimizeButton.MouseButton1Click:Connect(function()
     closed = not closed
     if closed then
         ImageLabel_1.Image = "http://www.roblox.com/asset/?id=5597108117"
@@ -437,7 +420,7 @@ function toggleMinimize()
         LeftPanel.Visible = true
         RightPanel.Visible = true
     end
-end
+end)
 
 --- Checks if cursor is within resize range
 --- @param p Vector2
@@ -464,7 +447,6 @@ function mouseEntered()
         connections["SIMPLESPY_CURSOR"] = nil
     end
     connections["SIMPLESPY_CURSOR"] = RunService.RenderStepped:Connect(function()
-        --UserInputService.MouseIconEnabled = not mouseInGui
         customCursor.Visible = mouseInGui
         if mouseInGui and getgenv().SimpleSpyExecuted then
             local mouseLocation = UserInputService:GetMouseLocation() - GuiInset
@@ -476,26 +458,12 @@ function mouseEntered()
                 elseif type == 'Y' or type == 'B' then
                     customCursor.Image = "rbxassetid://6065821596"
                 end
+            else customCursor.Image = ""
             end
         else
             connections["SIMPLESPY_CURSOR"]:Disconnect()
         end
     end)
-end
-
---- Called when mouse moves
-function mouseMoved()
-    local mousePos = UserInputService:GetMouseLocation() - GuiInset
-    if not closed
-    and mousePos.X >= TopBar.AbsolutePosition.X and mousePos.X <= TopBar.AbsolutePosition.X + TopBar.AbsoluteSize.X
-    and mousePos.Y >= Background.AbsolutePosition.Y and mousePos.Y <= Background.AbsolutePosition.Y + Background.AbsoluteSize.Y then
-        if not mouseInGui then
-            mouseInGui = true
-            mouseEntered()
-        end
-    else
-        mouseInGui = false
-    end
 end
 
 --- Adjusts the ui elements to the 'Maximized' size
@@ -611,16 +579,6 @@ function eventSelect(frame)
     end
 end
 
---- Updates the canvas size to fit the current amount of function buttons
-function updateFunctionCanvas()
-    ScrollingFrame.CanvasSize = UDim2.fromOffset(UIGridLayout.AbsoluteContentSize.X, UIGridLayout.AbsoluteContentSize.Y)
-end
-
---- Updates the canvas size to fit the amount of current remotes
-function updateRemoteCanvas()
-    LogList.CanvasSize = UDim2.fromOffset(UIListLayout.AbsoluteContentSize.X, UIListLayout.AbsoluteContentSize.Y)
-end
-
 --- Allows for toggling of the tooltip and easy setting of le description
 --- @param enable boolean
 --- @param text string
@@ -713,7 +671,7 @@ function newButton(name, description, onClick)
         end
         onClick(FunctionTemplate, ...)
     end)
-    updateFunctionCanvas()
+    ScrollingFrame.CanvasSize = UDim2.fromOffset(UIGridLayout.AbsoluteContentSize.X, UIGridLayout.AbsoluteContentSize.Y)
 end
 
 --- Adds new Remote to logs
@@ -772,12 +730,11 @@ function newRemote(type, data)
     layoutOrderNum -= 1
     table.insert(remoteLogs, 1, {connect, RemoteTemplate})
     clean()
-    updateRemoteCanvas()
+    LogList.CanvasSize = UDim2.fromOffset(UIListLayout.AbsoluteContentSize.X, UIListLayout.AbsoluteContentSize.Y)
 end
 
 --- Generates a script from the provided arguments (first has to be remote path)
 function genScript(remote, args, method)
-    prevTables = {}
     local gen = ""
     if #args > 0 then
         gen = "local args = "..Serialize(args) .. "\n"
@@ -797,15 +754,12 @@ function genScript(remote, args, method)
             gen ..= Serialize(remote) .. ":"..method.."()"
         end
     end
-    prevTables = {}
     return gen
 end
 
 --- value-to-variable
 --- @param t any
 function v2v(t)
-    topstr = ""
-    bottomstr = ""
     local ret = ""
     local count = 1
     for i, v in next, t do
@@ -817,12 +771,6 @@ function v2v(t)
             ret = ret .. "local " .. type(v) .. "_" .. rawtostring(count) .. " = " .. Serialize(v) .. "\n"
         end
         count = count + 1
-    end
-    if #topstr > 0 then
-        ret = topstr .. "\n" .. ret
-    end
-    if #bottomstr > 0 then
-        ret = ret .. bottomstr
     end
     return ret
 end
@@ -1040,44 +988,25 @@ local newInvokeServer = newcclosure(function(...)
     return newindex("InvokeServer",originalFunction,...)
 end)
 
+local function enablehooks()
+    originalNamecall = hookmetamethod(game, "__namecall", newnamecall)
+    originalEvent = hookfunction(Instance.new("RemoteEvent").FireServer, newFireServer)
+    originalFunction = hookfunction(Instance.new("RemoteFunction").InvokeServer, newInvokeServer)
+    originalUnreliableEvent = hookfunction(Instance.new("UnreliableRemoteEvent").FireServer, newUnreliableFireServer)
+end
+
 local function disablehooks()
-    if hookmetamethod then
-        hookmetamethod(game,"__namecall",originalNamecall)
-    else
-        hookfunction(getrawmetatable(game).__namecall,originalNamecall)
-    end
+    hookmetamethod(game,"__namecall",originalNamecall)
     hookfunction(Instance.new("RemoteEvent").FireServer, originalEvent)
     hookfunction(Instance.new("RemoteFunction").InvokeServer, originalFunction)
     hookfunction(Instance.new("UnreliableRemoteEvent").FireServer, originalUnreliableEvent)
-end
-
---- Toggles on and off the remote spy
-function toggleSpy()
-    if not toggle then
-        if hookmetamethod then
-            originalNamecall = hookmetamethod(game, "__namecall", newnamecall)
-        else
-            originalNamecall = hookfunction(getrawmetatable(game).__namecall, newnamecall)
-        end
-        originalEvent = hookfunction(Instance.new("RemoteEvent").FireServer, newFireServer)
-        originalFunction = hookfunction(Instance.new("RemoteFunction").InvokeServer, newInvokeServer)
-        originalUnreliableEvent = hookfunction(Instance.new("UnreliableRemoteEvent").FireServer, newUnreliableFireServer)
-    else
-        disablehooks()
-    end
-end
-
---- Toggles between the two remotespy methods (hookfunction currently = disabled)
-function toggleSpyMethod()
-    toggleSpy()
-    toggle = not toggle
 end
 
 -- Log OnClientEvent, OnClientInvoke
 local function receiveRemote(v)
     if IsA(v, "BaseRemoteEvent") then
         connectedRemotes[#connectedRemotes+1] = v.OnClientEvent:Connect(function(...)
-            if configs.logfireclient and toggle then
+            if configs.logfireclient then
                 newindex("OnClientEvent", blankfunction, v, ...)
             end
         end)
@@ -1085,7 +1014,7 @@ local function receiveRemote(v)
         local callback = getcallbackvalue and getcallbackvalue(v, "OnClientInvoke")
         if callback then
             v.OnClientInvoke = function(...)
-                if configs.loginvokeclient and toggle then
+                if configs.loginvokeclient then
                     return newindex("OnClientInvoke", callback, v, ...)
                 end
                 return callback(...)
@@ -1109,7 +1038,7 @@ __newindex = hookmetamethod(game, "__newindex", newcclosure(function(self, key, 
     if not checkcaller() and self:IsA("RemoteFunction") then
         if key == "OnClientInvoke" then
             return __newindex(self, key, function(...)
-                if configs.loginvokeclient and toggle then
+                if configs.loginvokeclient then
                     return newindex("OnClientInvoke", value, self, ...)
                 end
                 return value(...)
@@ -1153,66 +1082,37 @@ local function shutdown()
     hookmetamethod(game, "__newindex", __newindex)
     SimpleSpy3:Destroy()
     Storage:Destroy()
-    --UserInputService.MouseIconEnabled = true
     getgenv().SimpleSpyExecuted = false
 end
 
 -- main
 if not getgenv().SimpleSpyExecuted then
-    local succeeded,err = pcall(function()
-        if not RunService:IsClient() then
-            error("SimpleSpy cannot run on the server!")
-        end
-        getgenv().SimpleSpyShutdown = shutdown
-        onToggleButtonClick()
-        if not hookmetamethod then
-            ErrorPrompt("Simple Spy V3 will not function to it's fullest capablity due to your executor not supporting hookmetamethod.")
-        end
-        codebox = Highlight.new(CodeBox)
-        codebox:setRaw("SimpleSpy V3")
-        getgenv().SimpleSpy = SimpleSpy
-        Background.MouseEnter:Connect(function(...)
-            mouseInGui = true
-            mouseEntered()
-        end)
-        Background.MouseLeave:Connect(function(...)
-            mouseInGui = false
-            mouseEntered()
-        end)
-        TextLabel:GetPropertyChangedSignal("Text"):Connect(scaleToolTip)
-        MinimizeButton.MouseButton1Click:Connect(toggleMinimize)
-        Simple.MouseButton1Click:Connect(onToggleButtonClick)
-        CloseButton.MouseEnter:Connect(onXButtonHover)
-        CloseButton.MouseLeave:Connect(onXButtonUnhover)
-        Simple.MouseEnter:Connect(onToggleButtonHover)
-        Simple.MouseLeave:Connect(onToggleButtonUnhover)
-        CloseButton.MouseButton1Click:Connect(shutdown)
-        table.insert(connections, UserInputService.InputBegan:Connect(backgroundUserInput))
-        connectResize()
-        SimpleSpy3.Enabled = true
-        spawn(function()
-            task.delay(1,onToggleButtonUnhover)
-        end)
-        schedulerconnect = RunService.Heartbeat:Connect(taskscheduler)
-        bringBackOnResize()
-        SimpleSpy3.Parent = (gethui and gethui()) or CoreGui
-        spawn(function()
-            local lp = Players.LocalPlayer or Players:GetPropertyChangedSignal("LocalPlayer"):Wait() or Players.LocalPlayer
-            generation = {
-                [OldDebugId(lp)] = 'game:GetService("Players").LocalPlayer',
-                [OldDebugId(lp:GetMouse())] = 'game:GetService("Players").LocalPlayer:GetMouse',
-                [OldDebugId(game)] = "game",
-                [OldDebugId(workspace)] = "workspace"
-            }
-        end)
-    end)
-    if succeeded then
-        getgenv().SimpleSpyExecuted = true
-    else
-        shutdown()
-        ErrorPrompt("An error has occured:\n"..rawtostring(err))
-        return
+    getgenv().SimpleSpyShutdown = shutdown
+    toggle = not toggle
+    enablehooks()
+    if not hookmetamethod then
+        ErrorPrompt("Simple Spy V3 will not function to it's fullest capablity due to your executor not supporting hookmetamethod.")
     end
+    codebox = Highlight.new(CodeBox)
+    codebox:setRaw("SimpleSpy V3")
+    getgenv().SimpleSpy = SimpleSpy
+    Background.MouseEnter:Connect(function(...)
+        mouseInGui = true
+        mouseEntered()
+    end)
+    Background.MouseLeave:Connect(function(...)
+        mouseInGui = false
+        mouseEntered()
+    end)
+    Simple.MouseButton1Click:Connect(onToggleButtonClick)
+    CloseButton.MouseButton1Click:Connect(shutdown)
+    table.insert(connections, UserInputService.InputBegan:Connect(backgroundUserInput))
+    connectResize()
+    SimpleSpy3.Enabled = true
+    schedulerconnect = RunService.Heartbeat:Connect(taskscheduler)
+    bringBackOnResize()
+    SimpleSpy3.Parent = (gethui and gethui()) or CoreGui
+    getgenv().SimpleSpyExecuted = true
 else
     SimpleSpy3:Destroy()
     return
