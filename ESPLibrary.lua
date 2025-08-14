@@ -54,7 +54,7 @@ Library.GlobalSettings = setmetatable({}, {
     __newindex = function(_, key, value)
         Library.DefaultSettings[key] = value
         for _, ESP in pairs(Library.ESP) do
-            ESP:Update({[key] = value})
+            ESP.Settings[key] = value
         end
     end
 })
@@ -124,25 +124,6 @@ Library.Add = function(...)
     Tracer.Transparency = ESP.Settings.TracerTransparency
     ESP.Tracer = Tracer
     
-    function ESP:Update(newSettings)
-        for i, v in pairs(newSettings) do
-            ESP.Settings[i] = v
-            if ESP.TextLabel then
-                ESP.TextLabel.TextColor3 = ESP.Settings.Color
-                ESP.TextLabel.TextSize = ESP.Settings.TextSize
-            end
-            if ESP.Highlight then
-                ESP.Highlight.FillColor = ESP.Settings.Color
-                ESP.Highlight.OutlineColor = ESP.Settings.Color
-            end
-            if ESP.Tracer then
-                ESP.Tracer.Color = ESP.Settings.Color
-                ESP.Tracer.Thickness = ESP.Settings.TracerThickness
-                ESP.Tracer.Transparency = ESP.Settings.TracerTransparency
-            end
-        end
-    end
-    
     function ESP:Destroy()
         ESP.Folder:Destroy()
         if ESP.Tracer then
@@ -182,7 +163,9 @@ end
 
 Library.Update = function(tag, newSettings)
     Library.ForEachTag(tag, function(ESP)
-        ESP:Update(newSettings)
+        for i, v in pairs(newSettings) do
+            ESP.Settings[i] = v
+        end
     end)
 end
 
@@ -234,6 +217,8 @@ table.insert(Library.Connections, RunService.RenderStepped:Connect(function()
         if ESP.BillboardGui then
             ESP.BillboardGui.Enabled = ESP.Settings.ShowTextLabel
             if ESP.BillboardGui.Enabled then
+                ESP.TextLabel.TextColor3 = ESP.Settings.Color
+                ESP.TextLabel.TextSize = ESP.Settings.TextSize
                 if ESP.Settings.ShowDistance then
                     ESP.TextLabel.Text = ("%s\n[%s]"):format(ESP.Settings.Name, math.floor(Distance))
                 else
@@ -244,6 +229,10 @@ table.insert(Library.Connections, RunService.RenderStepped:Connect(function()
         
         if ESP.Highlight then
             ESP.Highlight.Adornee = ESP.Settings.ShowHighlight and ESP.Settings.Object or nil
+            if ESP.Highlight.Adornee then
+                ESP.Highlight.FillColor = ESP.Settings.Color
+                ESP.Highlight.OutlineColor = ESP.Settings.Color
+            end
         end
         
         if ESP.Tracer then
@@ -259,6 +248,9 @@ table.insert(Library.Connections, RunService.RenderStepped:Connect(function()
                 end
                 ESP.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, TracerY)
                 ESP.Tracer.To = Vector2.new(ScreenPosition.X, ScreenPosition.Y)
+                ESP.Tracer.Color = ESP.Settings.Color
+                ESP.Tracer.Thickness = ESP.Settings.TracerThickness
+                ESP.Tracer.Transparency = ESP.Settings.TracerTransparency
             end
         end
     end
