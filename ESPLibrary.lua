@@ -8,13 +8,13 @@ local CoreGui = cloneref(game:GetService("CoreGui"))
 local RunService = cloneref(game:GetService("RunService"))
 
 local LP = Players.LocalPlayer
-local character = LP.Character
-local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+local Character = LP.Character
+local RootPart = Character and Character:FindFirstChild("HumanoidRootPart")
 local Camera = workspace.CurrentCamera
 
 local function GetDistance(position)
-    if rootPart then
-        return (rootPart.Position - position).Magnitude
+    if RootPart then
+        return (RootPart.Position - position).Magnitude
     elseif Camera then
         return (Camera.CFrame.Position - position).Magnitude
     end
@@ -42,10 +42,23 @@ local Library = {
         ShowHighlight = true,
         ShowDistance = true,
         MaxDistance = math.huge,
+        ShowTracer = false,
+        TracerPosition = "Top",
+        TracerThickness = 1,
+        TracerTransparency = 1
     }
 }
 
 Library.ESPFolder.Name = "ESPFolder"
+Library.GlobalSettings = setmetatable({}, {
+    __newindex = function(_, key, value)
+        Library.DefaultSettings[key] = value
+        for _, ESP in pairs(Library.ESP) do
+            ESP:Update({[key] = value})
+        end
+    end
+})
+
 Library.Add = function(...)
     local espSettings
     if typeof(...) == "table" then
@@ -64,81 +77,89 @@ Library.Add = function(...)
     
     local ESP = {
         Index = #Library.ESP+1,
-        Settings = espSettings,
-        Instances = {}
+        Settings = espSettings
     }
-    ESP.Instances.Folder = Instance.new("Folder", Library.ESPFolder)
-    ESP.Instances.Folder.Name = ESP.Settings.Tag
+    ESP.Folder = Instance.new("Folder", Library.ESPFolder)
+    ESP.Folder.Name = ESP.Settings.Tag
     
     if Library.Tags[ESP.Settings.Tag] == nil then
         Library.Tags[ESP.Settings.Tag] = true
     end
     
-    local BillboardGui
-    local TextLabel
-    if ESP.Settings.ShowTextLabel then
-        BillboardGui = Instance.new("BillboardGui", ESP.Instances.Folder)
-        BillboardGui.Name = ESP.Settings.Tag
-        BillboardGui.Enabled = false
-        BillboardGui.ResetOnSpawn = false
-        BillboardGui.AlwaysOnTop = true
-        BillboardGui.Size = UDim2.new(0, 200, 0, 50)
-        BillboardGui.Adornee = ESP.Settings.Object
-        BillboardGui.StudsOffset = Vector3.new(0, 0, 0)
+    local BillboardGui = Instance.new("BillboardGui", ESP.Folder)
+    BillboardGui.Name = ESP.Settings.Tag
+    BillboardGui.Enabled = false
+    BillboardGui.ResetOnSpawn = false
+    BillboardGui.AlwaysOnTop = true
+    BillboardGui.Size = UDim2.new(0, 200, 0, 50)
+    BillboardGui.Adornee = ESP.Settings.Object
+    BillboardGui.StudsOffset = Vector3.new(0, 0, 0)
+    ESP.BillboardGui = BillboardGui
         
-        TextLabel = Instance.new("TextLabel", BillboardGui)
-        TextLabel.Size = UDim2.new(1, 0, 1, 0)
-        TextLabel.Font = Enum.Font.SourceSans
-        TextLabel.TextWrapped = true
-        TextLabel.RichText = true
-        TextLabel.TextStrokeTransparency = 0.5
-        TextLabel.BackgroundTransparency = 1
-        TextLabel.Text = ESP.Settings.Name
-        TextLabel.TextColor3 = ESP.Settings.Color
-        TextLabel.TextSize = ESP.Settings.TextSize
-        Instance.new("UIStroke", TextLabel)
-        
-        ESP.Instances.BillboardGui = BillboardGui
-        ESP.Instances.TextLabel = TextLabel
-    end
+    local TextLabel = Instance.new("TextLabel", BillboardGui)
+    TextLabel.Size = UDim2.new(1, 0, 1, 0)
+    TextLabel.Font = Enum.Font.SourceSans
+    TextLabel.TextWrapped = true
+    TextLabel.RichText = true
+    TextLabel.TextStrokeTransparency = 0.5
+    TextLabel.BackgroundTransparency = 1
+    TextLabel.Text = ESP.Settings.Name
+    TextLabel.TextColor3 = ESP.Settings.Color
+    TextLabel.TextSize = ESP.Settings.TextSize
+    Instance.new("UIStroke", TextLabel)
+    ESP.TextLabel = TextLabel
     
-    local Highlight
-    if ESP.Settings.ShowHighlight then
-        Highlight = Instance.new("Highlight", ESP.Instances.Folder)
-        Highlight.Adornee = nil
-        Highlight.FillColor = ESP.Settings.Color
-        Highlight.OutlineColor = ESP.Settings.Color
-        Highlight.FillTransparency = 0.65
-        Highlight.OutlineTransparency = 0
-        
-        ESP.Instances.Highlight = Highlight
-    end
+    local Highlight = Instance.new("Highlight", ESP.Folder)
+    Highlight.Adornee = nil
+    Highlight.FillColor = ESP.Settings.Color
+    Highlight.OutlineColor = ESP.Settings.Color
+    Highlight.FillTransparency = 0.65
+    Highlight.OutlineTransparency = 0
+    ESP.Highlight = Highlight
+    
+    local Tracer = Drawing.new("Line")
+    Tracer.Visible = false
+    Tracer.Color = ESP.Settings.Color
+    Tracer.Thickness = ESP.Settings.TracerThickness
+    Tracer.Transparency = ESP.Settings.TracerTransparency
+    ESP.Tracer = Tracer
     
     function ESP:Update(newSettings)
         for i, v in pairs(newSettings) do
             ESP.Settings[i] = v
-            if TextLabel then
-                TextLabel.TextColor3 = ESP.Settings.Color
-                TextLabel.TextSize = ESP.Settings.TextSize
+            if ESP.TextLabel then
+                ESP.TextLabel.TextColor3 = ESP.Settings.Color
+                ESP.TextLabel.TextSize = ESP.Settings.TextSize
             end
-            if Highlight then
-                Highlight.FillColor = ESP.Settings.Color
-                Highlight.OutlineColor = ESP.Settings.Color
+            if ESP.Highlight then
+                ESP.Highlight.FillColor = ESP.Settings.Color
+                ESP.Highlight.OutlineColor = ESP.Settings.Color
+            end
+            if ESP.Tracer then
+                ESP.Tracer.Color = ESP.Settings.Color
+                ESP.Tracer.Thickness = ESP.Settings.TracerThickness
+                ESP.Tracer.Transparency = ESP.Settings.TracerTransparency
             end
         end
     end
     
     function ESP:Destroy()
-        ESP.Instances.Folder:Destroy()
+        ESP.Folder:Destroy()
+        if ESP.Tracer then
+            ESP.Tracer:Remove()
+        end
         Library.ESP[ESP.Index] = nil
     end
     
     function ESP:ToggleVisibility(Value)
-        if BillboardGui then
-            BillboardGui.Enabled = Value
+        if ESP.BillboardGui and ESP.Settings.ShowTextLabel then
+            ESP.BillboardGui.Enabled = Value
         end
-        if Highlight then
-            Highlight.Adornee = Value and ESP.Settings.Object or nil
+        if ESP.Highlight and ESP.Settings.ShowHighlight then
+            ESP.Highlight.Adornee = Value and ESP.Settings.Object or nil
+        end
+        if ESP.Tracer and ESP.Settings.ShowTracer then
+            ESP.Tracer.Visible = Value
         end
     end
     ESP:ToggleVisibility(Library.Tags[ESP.Settings.Tag])
@@ -181,8 +202,8 @@ Library.Destroy = function()
 end
 
 table.insert(Library.Connections, LP.CharacterAdded:Connect(function(newCharacter)
-    character = newCharacter
-    rootPart = character:WaitForChild("HumanoidRootPart")
+    Character = newCharacter
+    RootPart = Character:WaitForChild("HumanoidRootPart")
 end))
 
 table.insert(Library.Connections, RunService.RenderStepped:Connect(function()
@@ -210,11 +231,34 @@ table.insert(Library.Connections, RunService.RenderStepped:Connect(function()
             continue
         end
         
-        if ESP.Settings.ShowTextLabel then
-            if ESP.Settings.ShowDistance then
-                ESP.Instances.TextLabel.Text = ("%s\n[%s]"):format(ESP.Settings.Name, math.floor(Distance))
-            else
-                ESP.Instances.TextLabel.Text = ESP.Settings.Name
+        if ESP.BillboardGui then
+            ESP.BillboardGui.Enabled = ESP.Settings.ShowTextLabel
+            if ESP.BillboardGui.Enabled then
+                if ESP.Settings.ShowDistance then
+                    ESP.TextLabel.Text = ("%s\n[%s]"):format(ESP.Settings.Name, math.floor(Distance))
+                else
+                    ESP.TextLabel.Text = ESP.Settings.Name
+                end
+            end
+        end
+        
+        if ESP.Highlight then
+            ESP.Highlight.Adornee = ESP.Settings.ShowHighlight and ESP.Settings.Object or nil
+        end
+        
+        if ESP.Tracer then
+            ESP.Tracer.Visible = ESP.Settings.ShowTracer
+            if ESP.Tracer.Visible then
+                local TracerY
+                if ESP.Settings.TracerPosition == "Top" then
+                    TracerY = 0
+                elseif ESP.Settings.TracerPosition == "Center" then
+                    TracerY = Camera.ViewportSize.Y / 2
+                elseif ESP.Settings.TracerPosition == "Bottom" then
+                    TracerY = Camera.ViewportSize.Y
+                end
+                ESP.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, TracerY)
+                ESP.Tracer.To = Vector2.new(ScreenPosition.X, ScreenPosition.Y)
             end
         end
     end
