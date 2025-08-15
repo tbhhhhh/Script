@@ -189,6 +189,10 @@ table.insert(Library.Connections, LP.CharacterAdded:Connect(function(newCharacte
     RootPart = Character:WaitForChild("HumanoidRootPart")
 end))
 
+table.insert(Library.Connections, workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+	Camera = workspace.CurrentCamera
+end))
+
 table.insert(Library.Connections, RunService.RenderStepped:Connect(function()
     for _, ESP in pairs(Library.ESP) do
         if not ESP.Settings.Object or not ESP.Settings.Object.Parent then
